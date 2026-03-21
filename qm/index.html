@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>RndFile</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body style="background-color:white;">
+
+<div id="elem_cont" style="display:none;">
+
+<div id="elem_menus">
+<div style="cursor:pointer;display:inline-block;width:48%;" onclick="show_opts_m();"><br></div>
+<div style="cursor:pointer;display:inline-block;width:48%;" onclick="show_opts();"><br></div>
+</div>
+
+<div style="text-align:center;">
+ <img id="elem_im_quest" style="border:1px solid red;display:none">
+ <iframe id="elem_ifrm" style="width:100%;height:70px;display:none"></iframe>
+ <div id="elem_dv_quest"></div>
+</div>
+
+</div>
+
+<div id="elem_msg" style="display:none;position:fixed;z-index:1;padding-top:50px;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.4);" onclick="if (event.target==this) this.style.display='none';">
+<div id="elem_dv_msg" style="color:gray;background-color:#fefefe;margin:auto;border:1px solid #888;width:60%;font-family:arial,sans-serif;font-size:15px;">
+<div style="text-align:center;border-bottom:1px solid;"><span style="color:black">Options</span></div>
+<div id="elem_menu_opts" style="max-height:500px;overflow-y:auto;"></div>
+</div>
+</div>
+
+<div id="elem_msg2" style="display:none;position:fixed;z-index:1;padding-top:50px;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.4);" onclick="if (event.target==this) this.style.display='none';">
+<div id="elem_dv_msg2" style="color:gray;background-color:#fefefe;margin:auto;border:1px solid #888;width:60%;font-family:arial,sans-serif;font-size:15px;">
+<div style="text-align:center;border-bottom:1px solid;"><span style="color:black">Options</span></div>
+<div id="elem_menu_opts2" style="max-height:500px;overflow-y:auto;"></div>
+</div>
+</div>
+
+
+<script src="/utilh.js"></script>
+<script>
+
+function is_mob()
+{ 
+ return (screen.width < 600); 
+}
+
+function is_img(fn)
+{
+ return ["jpg", "png", "gif", "jpeg", "tiff", "webp"].includes(fn.split(".").pop().toLowerCase());
+}
+
+function is_txt(fn)
+{
+ return ["txt", "html", "htm", "pdf"].includes(fn.split(".").pop().toLowerCase());
+}
+
+function set_url(elem)
+{
+ lst_id_dir = elem.id;
+ elem.firstElementChild.style.color = "blue";
+
+ if (cch[lst_id_dir]["files"]) {
+   var qtd = cch[lst_id_dir]["files"].length;
+   var elem_rnd = cch[lst_id_dir]["files"][randomIntFromInterval(0, qtd-1)];
+   cch[elem_rnd.id] = {};
+   cch[elem_rnd.id]["name"] = elem_rnd.name;
+   get_file(elem_rnd.id);
+   elem_msg2.style.display = "none";
+   return;
+ }
+
+
+ r_ajax(url_gd_list_files(lst_id_dir), 0,
+ (data) => {   
+
+   var files_f = data["files"].filter(o => !o["name"].startsWith("--"));
+   cch[lst_id_dir]["files"] = files_f;
+   var qtd_files = files_f.length;
+   elem.firstElementChild.innerHTML = cch[lst_id_dir]["name"] + " (" + qtd_files + ")"; 
+   var elem_rnd = files_f[randomIntFromInterval(0, qtd_files-1)];
+   cch[elem_rnd.id] = {};
+   cch[elem_rnd.id]["name"] = elem_rnd.name;
+   get_file(elem_rnd.id);
+   elem_msg2.style.display = "none";
+
+ }, (a,b) => alert(0));
+
+}
+
+function randomIntFromInterval(min, max)
+{ 
+ return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+function get_file(id)
+{
+ lst_id_file = id;
+ elem_dv_quest.innerHTML = "";
+ elem_ifrm.style.display = "none";
+ elem_im_quest.style.display = "inline";
+ elem_im_quest.src = "carregando.gif";
+
+ var fn = cch[id]["name"];
+ var is_img_or_txt = is_img(fn) || is_txt(fn);
+
+ if (!is_img_or_txt || cch[id]["url"]) return get_file_aux(id);
+
+ r_ajax(url_gd_file_byte(id),0,
+ (data) => {
+ cch[id]["url"] = URL.createObjectURL(data);
+ get_file_aux(id);
+ },
+ (a) => console.log(a), "blob");
+}
+
+function get_file_aux(id)
+{
+ elem_im_quest.style.display = "none"; 
+
+ var fn = cch[id]["name"];
+ var cnf = get_config(fn.substring(0,fn.lastIndexOf(".")));
+ var fn_display = cnf[1] + fn.substring(fn.lastIndexOf("."));
+ var url_blob = cch[id]["url"];
+
+ if (!url_blob) {
+  elem_dv_quest.innerHTML = `<br><a style="margin-left:13px;"></a>${get_lnk_gd_file(id)}<a style="margin-left:13px;"></a>${get_lnk_ext(id)}`;
+  return;
+ }
+
+ if (is_img(fn)) {
+  elem_im_quest.style.display = "inline";
+  elem_im_quest.style.border = "1px solid red";
+  elem_im_quest.style.removeProperty("width");
+  elem_im_quest.style.removeProperty("height");
+  elem_im_quest.style.maxHeight = is_mob()? "600px": "500px"; 
+  if (is_mob()) elem_im_quest.style.width = "98%";
+  elem_im_quest.src = url_blob;
+  elem_im_quest.title = fn_display;  
+ }
+
+ if (is_txt(fn)) {
+  elem_ifrm.style.display = "inline";
+  elem_ifrm.style.height = "555px";
+  if (is_mob()) elem_ifrm.style.width = "98%";
+  elem_ifrm.src = url_blob;
+  elem_ifrm.title = fn_display; 
+ }
+
+
+}
+
+function down_blob()
+{
+ var elem = (elem_ifrm.style.display == "none") ? elem_im_quest : elem_ifrm;
+ var a = document.createElement("a");
+ a.href =  elem.src;
+ a.download = elem.title;
+ a.click();
+ a.remove();
+}
+
+function set_random(fn_filter_div)
+{
+ var divs = Array.from(elem_menu_opts2.getElementsByTagName("div"));
+ var divs_f = divs.filter(fn_filter_div);
+ if (divs_f.length == 0) return;
+ set_url(divs_f[randomIntFromInterval(0, divs_f.length - 1)]);
+} 
+
+function set_random_r()
+{
+ if (arg_r == "1") return set_random(d => true);
+ var arg_r2 = arg_r.split(";").map(s => s.trim());
+ set_random(d => (arg_r2.includes(d.id) || arg_r2.includes(cch[d.id]["name"])));
+}
+
+function show_opts_m()
+{
+ if (m_id == "" && m_sid == "") return;
+ elem_msg2.style.display='block';
+}
+
+function show_opts()
+{
+ elem_menu_opts.innerHTML = "";
+
+  if (lst_id_file != "" && cch[lst_id_file]["url"]) add_opts_it(elem_menu_opts, "Download", () => {
+   down_blob();
+   elem_msg.style.display = "none";
+  });
+ 
+ if (elem_im_quest.style.display != "none") {   
+  add_opts_it(elem_menu_opts, "Width (100%)", () =>  {
+   elem_im_quest.style.width = "100%";
+   elem_msg.style.display = "none";
+   });
+ 
+  add_opts_it(elem_menu_opts, "Width (80%)", () =>  {
+   elem_im_quest.style.width = "80%";
+   elem_msg.style.display = "none";
+   });
+ 
+  add_opts_it(elem_menu_opts, "Width (60%)", () =>  {
+   elem_im_quest.style.width = "60%";
+   elem_msg.style.display = "none";
+   });
+ }
+
+ if (elem_ifrm.style.display != "none") { 
+  add_opts_it(elem_menu_opts, "Height (110%)", () =>  {
+   elem_ifrm.style.height = (1.1*555) + "px";
+   elem_msg.style.display = "none";
+   });
+
+  add_opts_it(elem_menu_opts, "Height (100%)", () =>  {
+   elem_ifrm.style.height = "555px";
+   elem_msg.style.display = "none";
+   });
+ 
+  add_opts_it(elem_menu_opts, "Height (90%)", () =>  {
+   elem_ifrm.style.height = (0.9*555) + "px";
+   elem_msg.style.display = "none";
+   });
+ }
+
+ if (lst_id_dir != ""){
+ add_opts_it(elem_menu_opts, "Rnd (" + cch[lst_id_dir]["name"] + "::" + cch[lst_id_dir]["files"].length + ")", () => {
+   set_url(document.getElementById(lst_id_dir));
+   elem_msg.style.display = "none";
+ });
+ }
+
+if (arg_r != "" && arg_r != "1") add_opts_it(elem_menu_opts, "Rnd (URL::" + arg_r.split(";").length + ")", () => {
+  set_random_r();
+  elem_msg.style.display = "none";
+});
+
+ if (m_id != ""){
+ add_opts_it(elem_menu_opts, "Rnd (All)", () => { 
+  set_random(d => true);
+  elem_msg.style.display = "none";
+ });
+ }
+
+ if (m_id.startsWith("10BCQm")){
+
+  add_opts_it(elem_menu_opts, "Rnd (9A)", () => {
+      set_random(d => d.firstElementChild.innerHTML.startsWith("_"));
+      elem_msg.style.display = "none";
+  });
+  add_opts_it(elem_menu_opts, "Rnd (EM1)", () => {
+      set_random(d => d.firstElementChild.innerHTML.startsWith("EM1"));
+      elem_msg.style.display = "none";
+  });
+  add_opts_it(elem_menu_opts, "Rnd (EM2)", () => {
+      set_random(d => d.firstElementChild.innerHTML.startsWith("EM2"));
+      elem_msg.style.display = "none";
+ });
+  add_opts_it(elem_menu_opts, "Rnd (EM3)", () => {
+      set_random(d => d.firstElementChild.innerHTML.startsWith("EM3"));
+      elem_msg.style.display = "none";
+ });
+
+ }
+
+ if (m_sid != ""){
+  add_opts_it(elem_menu_opts, "Info: " + cch[m_sid]["files"].length + " Files");
+  add_opts_it(elem_menu_opts, get_lnk_blb(lst_id_file), dvclnk);
+  add_opts_it(elem_menu_opts, get_lnk_gd_dir(m_sid), dvclnk);
+ }
+
+ if (lst_id_dir == "" && m_id != ""){
+  if (cch[m_id]["files"]) add_opts_it(elem_menu_opts, get_lnk_sel(m_id), dvclnk);
+  add_opts_it(elem_menu_opts, get_lnk_gd_dir(m_id), dvclnk);
+ }
+
+ add_opts_it(elem_menu_opts, get_lnk_sel(lst_id_dir), dvclnk);
+ if (m_sid == "") add_opts_it(elem_menu_opts, get_lnk_blb(lst_id_file), dvclnk);
+ add_opts_it(elem_menu_opts, get_lnk_gd_dir(lst_id_dir), dvclnk);
+ add_opts_it(elem_menu_opts, get_lnk_gd_file(lst_id_file), dvclnk);
+ add_opts_it(elem_menu_opts, get_lnk_ext(lst_id_file), dvclnk);
+
+ elem_msg.style.display = "block";
+}
+
+function dvclnk(elem, evt)
+{
+ if (!is_mob()) return;
+ var ls = elem.getElementsByTagName("a");
+ if (ls.length == 0) return;
+ if (evt.target.tagName == "DIV") ls[0].click();
+}
+
+function add_opts_it(elem, name, fn_click, id)
+{
+ if (name == "") return;
+ var new_it = document.createElement("div");
+ if (id) new_it.id = id;
+ if (fn_click) new_it.onclick = () => {fn_click(new_it, event);}; 
+ new_it.innerHTML = "<span style='cursor:default;'>" + name + "</span>";
+ new_it.style.cssText = "padding:5px;word-wrap:break-word;";
+ elem.appendChild(new_it);
+ if (new_it.previousElementSibling) new_it.previousElementSibling.style.borderBottom = "1px solid";
+}
+
+function get_lnk_gd_dir(id)
+{
+ if (id == "") return "";
+ var url_gd = url_gd_view_folder(id);
+ return `
+   <img src="${get_ico_lnk(url_gd)}" width="16" height="16" style="vertical-align:middle;margin-right:5px;" onerror="this.src='${get_ico_lnk(0)}'">
+   <a href="${url_gd}" target="_blank">${cch[id]["name"]}</a>
+   `;
+}
+
+function get_lnk_blb(id)
+{
+ if ((id == "") || (cch[id]["url"] == undefined)) return "";
+ return `
+   <img src="${get_ico_lnk(1)}" width="16" height="16" style="vertical-align:middle;margin-right:5px;" onerror="this.src='${get_ico_lnk(0)}'">
+   <a target="_blank" href="${cch[id]["url"]}">Lnk Blob</a>
+   `;
+}
+
+function get_lnk_sel(id)
+{
+ if (id == "") return "";
+ var url_s = location.pathname + "?sid=s" + id + "&n=" +  encodeURIComponent(cch[id]["name"]);
+ return `
+   <img src="${get_ico_lnk(1)}" width="16" height="16" style="vertical-align:middle;margin-right:5px;" onerror="this.src='${get_ico_lnk(0)}'">
+   <a href="${url_s}">Select Mode</a>
+   `;
+}   
+
+function get_lnk_gd_file(id)
+{
+ if (id == "") return "";
+ var url_gd = url_gd_view_file(id);
+ var fn = cch[id]["name"];
+ var cnf = get_config(fn.substring(0,fn.lastIndexOf(".")));
+ var fn_display = cnf[1] + fn.substring(fn.lastIndexOf("."));
+ return `
+   <img src="${get_ico_lnk(url_gd)}" width="16" height="16" style="vertical-align:middle;margin-right:5px;" onerror="this.src='${get_ico_lnk(0)}'">
+   <a target="_blank" href="${url_gd}">${fn_display}</a>  
+   `;
+}
+
+function get_lnk_ext(id)
+{
+ if (id == "") return "";
+ var fn = cch[id]["name"];
+ var cnf = get_config(fn.substring(0,fn.lastIndexOf(".")));
+ var href_ext = cnf[2];
+ return (cnf[0] == 1) ? "" : `
+   <img src="${get_ico_lnk(href_ext)}" width="16" height="16" style="vertical-align:middle;margin-right:5px;" onerror="this.src='${get_ico_lnk(0)}'">
+   <a target="_blank" href="${href_ext}">Lnk Externo</a>
+   `;
+}
+
+
+function url_gd_list_all(id)
+{
+ return `https://www.googleapis.com/drive/v3/files?q=%27${id}%27+in+parents+and+trashed%3Dfalse&key=${api_key}&fields=files(id,name,mimeType)&orderBy=name&pageSize=1000`
+}
+
+function  url_gd_list_files(id)
+{
+ return `https://www.googleapis.com/drive/v3/files?q=%27${id}%27+in+parents+and+trashed%3Dfalse+and+mimeType!%3D%27application/vnd.google-apps.folder%27&key=${api_key}&fields=files(id,name)&orderBy=name&pageSize=1000`
+}
+
+function url_gd_file_info(id)
+{
+ return `https://www.googleapis.com/drive/v3/files/${id}?key=${api_key}`;
+}
+
+function url_gd_file_byte(id)
+{
+ return `https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${api_key}`;
+}
+
+function url_gd_view_file(id)
+{
+ return `https://drive.google.com/file/d/${id}/view`;
+}
+
+function url_gd_view_folder(id)
+{
+ return `https://drive.google.com/drive/folders/${id}`;
+}
+
+function r_ajax(url, args, fn_suc, fn_err, tp_res)
+{
+ var xhr = new XMLHttpRequest();
+
+ xhr.responseType = (tp_res == undefined) ? "json" : tp_res;
+ 
+ var _fn_err = (fn_err == null || fn_err == undefined) ? (o) => console.log(o) : fn_err;
+
+ xhr.onreadystatechange = () => {
+     if (xhr.readyState == 4){
+     if (xhr.status != 200) {_fn_err(xhr); return;}
+     if (xhr.response == null) {_fn_err(xhr); return;}
+     fn_suc(xhr.response);
+     }
+ }
+
+ if (typeof args == "number"){
+  xhr.open("GET", url, true);
+  xhr.send();
+  return;
+  };
+
+ if (typeof args == "string"){
+  xhr.open("POST", url, true);
+  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  xhr.send(args);
+  return;
+ }
+
+ if (typeof args == "object"){
+  xhr.open("POST", url, true);
+  xhr.send(args);
+ }
+
+}
+
+var api_key = 'AIzaSyC4oGvGvMehPLyCwPoWMng-4NYD-2oLGbA';
+var cch = {};
+var lst_id_dir = "";
+var lst_id_file = "";
+var m_id = getp("id").substring(1);
+var m_sid = getp("sid").substring(1);
+var arg_r = getp("r");
+
+(() => {
+
+var m_fid = getp("fid").substring(1);
+var arg_n = getp("n");
+var root_name = (arg_n == "") ? "." : arg_n;
+
+if (m_sid != ""){
+ cch[m_sid] = {};
+ cch[m_sid]["name"] = root_name;
+ r_ajax(url_gd_list_files(m_sid) , 0,
+ (data) => { 
+ elem_cont.style.display = "block";
+ var tab = data["files"].filter(o => !o["name"].startsWith("--"));
+ cch[m_sid]["files"] = tab;
+ tab.forEach(o => {
+   cch[o["id"]] = {};
+   cch[o["id"]]["name"] = o["name"];
+   var fn = o["name"];
+   var cnf = get_config(fn.substring(0,fn.lastIndexOf(".")));
+   add_opts_it(elem_menu_opts2, cnf[1], (d) => {
+     d.firstElementChild.style.color = "blue";
+     get_file(o["id"]);
+     elem_msg2.style.display = "none";
+     }); 
+  });
+ },(a,b) => alert(0));
+}
+
+if (m_fid != ""){
+ elem_cont.style.display = "block";
+ cch[m_fid] = {};
+ cch[m_fid]["name"] = arg_n;
+
+ if (arg_n != "") return get_file(m_fid);  
+    
+ return r_ajax(url_gd_file_info(m_fid), 0, (data) => {
+        cch[m_fid]["name"] = data["name"];
+        get_file(m_fid);
+        }, (a,b) => alert(0));
+};
+
+if (m_id == "") return;
+cch[m_id] = {};
+cch[m_id]["name"] = root_name;
+
+r_ajax(url_gd_list_all(m_id) ,0,
+(data) => {  
+ elem_cont.style.display = "block";
+ var tab = data["files"].filter(o => !o["name"].startsWith("--") && o["mimeType"] == "application/vnd.google-apps.folder");
+ tab.forEach(o => {
+  cch[o["id"]] = {};
+  cch[o["id"]]["name"] = o["name"];
+  add_opts_it(elem_menu_opts2, o["name"], set_url, o["id"]);
+ });
+
+ var tab2 = data["files"].filter(o => !o["name"].startsWith("--") && o["mimeType"] != "application/vnd.google-apps.folder");
+ if (tab2.length != 0) {
+   cch[m_id]["files"] = tab2;
+   add_opts_it(elem_menu_opts2, cch[m_id]["name"] + " (" + tab2.length + ")", set_url, m_id);
+ }
+
+ document.addEventListener('keydown', (event) => {   
+    if (event.code == 'KeyR') set_random(b => true); 
+ });
+
+ if (arg_r != "") return set_random_r();
+
+},(a,b) => alert(0));
+
+})();
+
+
+
+</script>
+
+</body>
+</html>
