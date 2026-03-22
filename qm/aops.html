@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>RP</title>
+<meta charset="utf-8" />
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<script src="/utilh.js"></script>
+</head>
+
+<body style="background-color:white;">
+
+
+<div style="text-align:center;">
+ <br>
+ <div id="elem_dv_quest" style="word-wrap:break-word;line-height:175%;"><br>...<br></div>
+</div>
+
+
+<script>
+
+(()=>{
+
+ var url_link = "https://example.com";
+ var p_comp = getp("c");
+ if (p_comp == "")   url_link = get_lnk_amc12();
+ if (p_comp == "10") url_link = get_lnk_amc10();
+ if (p_comp == "13") url_link = get_lnk_aime();
+
+ elem_dv_quest.innerHTML = `
+  <img src="${get_ico_lnk(url_link)}" width="16" height="16" style="vertical-align:middle;margin-right:6px;" onerror="this.src='${get_ico_lnk(0)}'">
+  <a target="_blank" href="${url_link}">${url_link}</a>
+  `;
+
+})();
+
+function getp(pn,url) 
+{
+ var result = "", tmp = [];
+ var items = (url==undefined)?location.search.substr(1).split("&"):url.search.substr(1).split("&");
+ for (var index = 0; index < items.length; index++) {
+ tmp = items[index].split("=");
+ if (tmp[0] === pn) result = decodeURIComponent(tmp[1]);
+ }
+ return result;
+}
+
+function get_lnk_amc10()
+{
+ var arr_anos = []; // 2000 ...
+ var arr_pns = [];  // 1 a 25
+ var arr_pers = ["A","B"];
+
+ var ano_at = (new Date()).getFullYear();
+ for (let i = 2000; i < ano_at; i++) arr_anos.push(i);
+ for (let i = 1; i < 26; i++) arr_pns.push(i);
+
+ var r_ano = arr_anos[Math.floor(Math.random() * arr_anos.length)];
+ var r_pn = arr_pns[Math.floor(Math.random() * arr_pns.length)];
+ var r_per = arr_pers[Math.floor(Math.random() * arr_pers.length)];
+
+ if (r_ano == 2000 || r_ano == 2001) return `https://artofproblemsolving.com/wiki/index.php/${r_ano}_AMC_10_Problems/Problem_${r_pn}`;
+ return `https://artofproblemsolving.com/wiki/index.php/${r_ano}_AMC_10${r_per}_Problems/Problem_${r_pn}`;
+} 
+
+function get_lnk_amc12()
+{
+ var arr_anos = []; // 1969 ...
+ var arr_pns1 = []; // 1 a 30
+ var arr_pns2 = []; // 1 a 25
+ var arr_pers = ["A","B"];
+
+ var ano_at = (new Date()).getFullYear();
+ for (let i = 1969; i < ano_at; i++) arr_anos.push(i);
+ for (let i = 1; i < 31; i++) arr_pns1.push(i);
+ for (let i = 1; i < 26; i++) arr_pns2.push(i);
+
+ var r_ano = arr_anos[Math.floor(Math.random() * arr_anos.length)];
+ var r_pn1 = arr_pns1[Math.floor(Math.random() * arr_pns1.length)];
+ var r_pn2 = arr_pns2[Math.floor(Math.random() * arr_pns2.length)];
+ var r_per = arr_pers[Math.floor(Math.random() * arr_pers.length)];
+
+ if (r_ano >= 1969 && r_ano <= 1999) return `https://artofproblemsolving.com/wiki/index.php/${r_ano}_AHSME_Problems/Problem_${r_pn1}`;
+ if (r_ano == 2000 || r_ano == 2001) return `https://artofproblemsolving.com/wiki/index.php/${r_ano}_AMC_12_Problems/Problem_${r_pn2}`;
+ return `https://artofproblemsolving.com/wiki/index.php/${r_ano}_AMC_12${r_per}_Problems/Problem_${r_pn2}`;
+} 
+
+function get_lnk_aime()
+{
+ var arr_anos = []; // 1983 ...
+ var arr_pns = [];  // 1 a 15
+ var arr_pers = ["I","II"];
+
+ var ano_at = (new Date()).getFullYear();
+ for (let i = 1983; i < ano_at; i++) arr_anos.push(i);
+ for (let i = 1; i < 16; i++) arr_pns.push(i);
+
+ var r_ano = arr_anos[Math.floor(Math.random() * arr_anos.length)];
+ var r_pn = arr_pns[Math.floor(Math.random() * arr_pns.length)];
+ var r_per = arr_pers[Math.floor(Math.random() * arr_pers.length)];
+
+ if (r_ano >= 1983 && r_ano <= 1999) return `https://artofproblemsolving.com/wiki/index.php/${r_ano}_AIME_Problems/Problem_${r_pn}`;
+ return `https://artofproblemsolving.com/wiki/index.php/${r_ano}_AIME_${r_per}_Problems/Problem_${r_pn}`;
+} 
+
+
+</script>
+
+</body>
+</html>
