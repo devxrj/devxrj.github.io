@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://stuk.github.io/jszip/dist/jszip.min.js"></script>
+</head>
+
+<body style="background-color:white;">
+
+
+<a href="?c=1">Cookies</a><a style="margin-left:25px;" href="?ls=1">LocalStorage</a><a style="margin-left:25px;" href="?b=1">Restaurar</a>
+<br>
+
+<div id='elem_lnk'>
+ <br>
+ <button style='margin-left:5px;margin-right:7px;' onclick='nf();'>New</button>
+ <input id="elem_tm_cook" style="display:none;" type="text" value="90" size="2"/>
+ <button style='margin-left:5px' onclick='ls_down_zip();'>Zip</button>
+ <button style='margin-left:5px' onclick='ls_down_json();'>Json</button>
+ <button style='margin-left:5px' onclick='ls_down_ind();'>Ind</button>
+ <br> <br>
+ <div id='elem_lnk2'></div>
+</div>
+
+<div id="elem_ed" style="display:none">
+ <br>
+ <span id="elem_spn_fn"></span><span id="elem_spn_size" style="margin-left:10px"></span>
+ <button id="elem_btn_clear" onclick="ed_clear();" style="margin-left:10px">Clear</button>
+ <br>
+ <textarea id='elem_ta' style='width:100%' spellcheck='false'></textarea>
+ <br>
+ <button id="elem_btn_atualizar" onclick="ed_atualizar();">Update</button>
+ <span id="elem_stt" style='margin-left:10px'></span>
+ <button onclick="ed_voltar();" style="margin-left:10px">Back</button>
+</div>
+
+<div id='elem_bkp' style="display:none">
+ <br><br>
+ <button style='margin-left:5px;margin-right:7px' onclick="this.nextElementSibling.click()">...</button>
+ <input style="display:none" type="file" multiple="multiple" accept="application/json,text/plain" onchange="inp_file_change(this);" />
+ <button type="button" style='margin-left:5px' onclick="bkp_down_zip();">Zip</button>
+ <button type="button" style='margin-left:5px' onclick="bkp_down_ind();">Ind</button>
+ <br><br>
+ <div id='bkp_keys'></div>
+<div>
+
+<script>
+
+var json_file_obj = null ;
+var is_ck = false;
+
+if (getp("c")=="1"){
+ is_ck=true;
+ elem_tm_cook.style.display = "inline"
+}
+
+if (getp("b")=="1"){
+ elem_bkp.style.display = "block";
+ elem_lnk.style.display = "none"
+}
+
+function down_blob (name, blob) 
+{  
+ if (blob.type == "")  blob.type = "octet/stream";
+ var url = window.URL.createObjectURL(blob);
+ var a = document.createElement("a");
+ document.body.appendChild(a);
+ a.style = "display:none";
+ a.href = url; 
+ a.download = name;
+ a.click();
+ window.URL.revokeObjectURL(url);
+}
+
+
+/////////////
+
+function inp_file_change( elem )
+{
+ elem.previousElementSibling.innerHTML = elem.files.length;
+ var elem_bkp_keys = document.getElementById("bkp_keys");
+
+ var fileToLoad = elem.files[0];
+
+ var fileReader = new FileReader();
+ fileReader.onload = (fileLoadedEvent)=>{
+      json_txt = fileLoadedEvent.target.result;
+      json_file_obj = JSON.parse(json_txt);
+      var html = "";
+
+      json_file_obj["t"].forEach ((o,i)=>{ 
+      
+      html += `<span>
+      <span>${o["fn"]}</span>
+      <button style='margin-left:5px' onclick='bkp_vw(${i})'>View</button>
+      <button style='margin-left:5px' onclick='bkp_dw(${i})'>Down</button>
+      <br><br>
+      </span>`;
+     
+      });
+
+      elem_bkp_keys.innerHTML = html;
+  };
+  fileReader.onerror = (error) => { alert("ERROR"); console.log (error);  } ;
+
+  fileReader.readAsText(fileToLoad, "UTF-8");
+}
+
+function bkp_dw (ind)
+{
+ if (!json_file_obj) return;
+ var name = json_file_obj["t"][ind]["fn"];
+ var blob = new Blob([json_file_obj["t"][ind]["cnt"]]) ;
+ down_blob (name,blob);
+}
+
+function bkp_vw (ind)
+{
+ if (!json_file_obj) return;
+ elem_lnk.style.display="none";
+ elem_bkp.style.display="none";
+ elem_ed.style.display="block";
+ elem_ta.value = json_file_obj["t"][ind]["cnt"];
+ elem_spn_fn.innerHTML = "BKP (" + json_file_obj["t"][ind]["fn"] + ")";
+ elem_btn_atualizar.disabled = true;
+ elem_btn_clear.disabled = true;       
+}
+
+function bkp_down_ind()
+{
+ if (!json_file_obj) return;
+ if (confirm("DOWN " + json_file_obj["t"].length + " FILES?") != true) return;
+
+ json_file_obj["t"].forEach ((o,i)=>{ bkp_dw( i ); });
+}
+
+
+function bkp_down_zip()
+{
+ if (!json_file_obj) return;
+ var zip = new JSZip();
+ json_file_obj["t"].forEach( (o)=>(zip.file(o["fn"], o["cnt"] )) );
+ zip.generateAsync({type:"blob"}).then((content)=>{ down_blob("bkp_all.zip",content);});
+}
+
+/////////////
+
+
+
+
+function ls_down_ind()
+{
+ if (loc_keys().length == 0) return;
+ if (confirm("DOWN " + loc_keys().length + " FILES?") != true) return;
+
+ loc_keys().forEach ((key)=>{ 
+  var blob = new Blob([loc_get(key)]) ;
+  down_blob (key + ".txt",blob);
+ });
+}
+
+function ls_down_zip()
+{
+ if (loc_keys().length == 0) return;
+ var zip = new JSZip();
+ loc_keys().forEach( (key)=>(zip.file(key + ".txt", loc_get(key) )) );
+ zip.generateAsync({type:"blob"}).then((content)=>{ down_blob("ls_all.zip",content);});
+}
+
+
+function ls_down_json()
+{
+ if (loc_keys().length == 0) return;
+ var a_json = [];
+ loc_keys().forEach((key)=>{ a_json.push( { "fn" : key + ".txt" , "cnt" : loc_get(key) } ) } );
+ var blob = new Blob( [`{"t":${JSON.stringify(a_json,null, 2)}}`] ) ;
+ down_blob ('ls_all.json',blob ) ;
+}
+
+
+function nf()
+{
+ let fn = prompt("Name:", "abc");
+ 
+ if (fn == null) return;
+ 	
+ if ( fn.trim() == "" ){ alert("Nome Invalido:" + fn); return; }
+ 
+ loc_set(fn,"ooooooo");
+ set_rel_ls(); 
+}
+
+
+function df(ind)
+{
+ var fn = document.getElementById("spn_n"+ind).innerHTML;
+ if (confirm("DEL : " + fn + "?") != true) return;
+
+ loc_rem (fn);
+ set_rel_ls();  
+}
+
+function dw(ind)
+{
+ var fn = document.getElementById("spn_n"+ind).innerHTML;
+ var blob = new Blob([loc_get(fn)]) ;
+ down_blob (fn + ".txt",blob);  
+}
+
+
+
+function rn(ind)
+{
+ var elem_spn = document.getElementById("spn_n"+ind);
+ 
+ var fn = elem_spn.innerHTML;
+ 
+ let fn2 = prompt("Name:", fn);
+ 
+ if (fn2 == null) return;
+ 
+ if ( fn2.trim() != "" && fn2.trim() == fn.trim() ) { alert("Nome Invalido:" + fn2); return; }
+ 	
+ var fn_val = loc_get(fn);
+ loc_rem (fn);
+ loc_set(fn2,fn_val);
+ set_rel_ls();
+}
+
+
+
+function ed(ind)
+{
+ var fn = document.getElementById("spn_n"+ind).innerHTML;
+ elem_lnk.style.display="none";
+ elem_bkp.style.display="none";
+ elem_ed.style.display="block";
+ elem_ta.value = loc_get(fn);
+ elem_spn_fn.innerHTML = fn;    
+ elem_spn_size.innerHTML = " (" + formatBytes(elem_ta.value.length) + ")";
+}
+
+function ed_clear()
+{ 
+ elem_ta.value = ""; 
+}
+
+function ed_atualizar()
+{
+ loc_set(elem_spn_fn.innerHTML,elem_ta.value.trim().replace(/\n/g, '\r\n'));
+ elem_stt.innerHTML = (new Date()).getMilliseconds();
+}
+
+function ed_voltar()
+{
+ elem_lnk.style.display="block";
+ elem_bkp.style.display="none";
+ elem_ed.style.display="none"; 
+ elem_stt.innerHTML = "";
+ elem_ta.value = "";
+ elem_spn_fn.innerHTML = "";  
+ elem_spn_size.innerHTML = "";
+ elem_btn_atualizar.disabled = false;
+ elem_btn_clear.disabled = false; 
+ if (getp("b")=="1") {
+ elem_lnk.style.display="none";
+ elem_bkp.style.display="block"; 
+ }
+}
+
+
+function set_rel_ls()
+{
+ var html = "";
+ 
+ loc_keys().forEach ((o,i)=>{ 
+ 
+      html += `<span>
+      <span id="spn_n${i}">${o}</span>
+      <button style='margin-left:5px' onclick='ed(${i})'>Ed</button>
+      <button style='margin-left:5px' onclick='rn(${i})'>Ren</button>
+      <button style='margin-left:5px' onclick='df(${i})'>Del</button>
+      <button style='margin-left:5px' onclick='dw(${i})'>Down</button>
+      <br><br>
+      </span>`;
+ 
+ });
+ 
+ elem_lnk2.innerHTML = html;
+}
+
+function set_cookie(cname, cvalue, exdays) 
+{
+ if (exdays == undefined) exdays = parseInt(elem_tm_cook.value);
+ var d = new Date();
+ d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+ var expires = "expires="+d.toUTCString();
+ document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";  
+}
+
+function get_cookie(cname) 
+{
+  let name = cname + "=";
+  let ca = document.cookie.split(';');
+  for(let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+function get_cookies_keys() 
+{
+  var keys = [];
+  var ca = document.cookie.split(';');
+  for(var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    var p = c.split("=");
+    keys.push ( p[0].trim() );
+  }
+  return keys;
+}
+
+function rem_cookie(cname)
+{ 
+ set_cookie(cname, "", -1); 
+}
+
+function getp(pn,url) 
+{
+ var result = "", tmp = [];
+ var items = (url==undefined)?location.search.substr(1).split("&"):url.search.substr(1).split("&");
+ for (var index = 0; index < items.length; index++) {
+ tmp = items[index].split("=");
+ if (tmp[0] === pn) result = decodeURIComponent(tmp[1]);
+ }
+ return result;
+}
+
+
+function loc_get(k)
+{ 
+ return (is_ck)?get_cookie(k):localStorage.getItem(k); 
+}
+
+function loc_set(k,v)
+{ 
+ if (is_ck) {
+ set_cookie(k,v); 
+ return;
+ }
+ localStorage.setItem(k,v); 
+}
+
+function loc_rem(k)
+{ 
+ if (is_ck) {
+ rem_cookie(k); 
+ return;
+ }
+ localStorage.removeItem(k); 
+}
+
+function loc_keys()
+{ 
+ return (is_ck) ? get_cookies_keys().sort() : Object.keys(localStorage).sort(); 
+}
+
+function formatBytes(bytes, decimals = 2) 
+{
+  if (bytes === 0) return '0 Bytes';
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+function is_mob() 
+{
+ return (screen.width < 600);
+}
+
+
+(() => {
+
+ elem_ta.style.height = is_mob()? "450px" : "500px" ;
+ set_rel_ls();
+
+})();
+
+
+
+</script>
+</body>
+</html>
+
+
