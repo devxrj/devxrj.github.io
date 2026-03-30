@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OAuth</title>
+</head>
+
+<body>
+<span>User: </span><input type="text" id="elem_user_id" style="width:50px" onfocusout="load_tkn_val();" value="4"> 
+<br><br>
+<button type="button" onclick="set_ls(this);">Client ID: </button> <input type="text" id="elem_client_id" style="width:500px"> 
+<br><br>
+<button type="button" onclick="set_ls(this);">Client Secret: </button> <input type="text" id="elem_client_secret" style="width:270px"> 
+<br><br>
+<button type="button" onclick="set_ls(this, 1);">Ref Tkn: </button> <input type="text" id="elem_ref_tkn" style="width:500px"> 
+<br><br>
+<button type="button" onclick="set_ls(this, 1);">Acc Tkn: </button> <input type="text" id="elem_acc_tkn" style="width:500px"> 
+<br><br>
+<button type="button" onclick="set_ls(this, 1);">Dttm Exp: </button> <input  type="text" id="elem_dttm_exp" style="width:315px">  
+
+<script>
+
+function set_ls(elem, opt)
+{
+ var elem_nxt = elem.nextElementSibling;
+ var suf = (opt) ? get_suf() : "";
+ localStorage.setItem(elem_nxt.id.replace("elem_", "") + suf, elem_nxt.value.trim()); 
+}
+
+function get_suf()
+{
+ return "_" + elem_user_id.value.trim();
+}
+
+function load_tkn_val()
+{
+elem_client_id.value = localStorage.getItem("client_id") || ""; 
+elem_client_secret.value = localStorage.getItem("client_secret") || ""; 
+elem_ref_tkn.value = localStorage.getItem("ref_tkn" + get_suf()) || ""; 
+elem_acc_tkn.value = localStorage.getItem("acc_tkn" + get_suf()) || ""; 
+elem_dttm_exp.value = localStorage.getItem("dttm_exp" + get_suf()) || ""; 
+}
+
+load_tkn_val();
+
+</script>
+
+</body>
+</html>
