@@ -4,11 +4,12 @@
 <head>
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OAuth</title>
+<title>Properties</title>
 </head>
 
 <body>
-<span>User: </span><input type="text" id="elem_user_id" style="width:50px" onfocusout="load_tkn_val();" value="4"> 
+<span>User: </span><input type="text" id="elem_user_id" style="width:50px" onfocusout="load_tkn_val();" value="4">
+<span id="elem_app" style="font-weight:bold;font-style:italic;color:blue;"></span>
 <br><br>
 <button type="button" onclick="set_ls(this);">Client ID: </button> <input type="text" id="elem_client_id" style="width:500px"> 
 <br><br>
@@ -24,6 +25,7 @@
 
 function set_ls(elem, opt)
 {
+ if ((elem_user_id.value.trim() == "") && (opt)) return alert("Empty User...");
  var elem_nxt = elem.nextElementSibling;
  var pref_ls = (opt) ? pref_app + "_" + get_usr() + "_" : pref_app + "_";
  localStorage.setItem(pref_ls + elem_nxt.id.replace("elem_", ""), elem_nxt.value.trim()); 
@@ -44,6 +46,7 @@ elem_dttm_exp.value = localStorage.getItem(pref_app + "_" + get_usr() + "_dttm_e
 }
 
 var pref_app = "gw";
+elem_app.innerHTML = "App: " + pref_app;
 load_tkn_val();
 
 </script>
