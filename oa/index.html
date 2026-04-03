@@ -5,22 +5,27 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Properties</title>
+<script src="/util_h.js"></script>
 </head>
 
 <body>
 <span>User: </span><input type="text" id="elem_user_id" style="width:50px" onfocusout="load_tkn_val();" value="4">
 <span id="elem_app" style="font-weight:bold;font-style:italic;color:blue;"></span>
 <br><br>
-<button type="button" onclick="set_ls(this);">Client ID: </button> <input type="text" id="elem_client_id" style="width:500px"> 
+<button type="button" onclick="set_ls(this);">Client ID: </button> <input type="text" id="elem_client_id" style="width:270px"> 
 <br><br>
 <button type="button" onclick="set_ls(this);">Client Secret: </button> <input type="text" id="elem_client_secret" style="width:270px"> 
 <br><br>
-<button type="button" onclick="set_ls(this, 1);">Ref Tkn: </button> <input type="text" id="elem_ref_tkn" style="width:500px"> 
+<button type="button" onclick="set_ls(this, 1);">Ref Tkn: </button> <input type="text" id="elem_ref_tkn" style="width:270px"> 
 <br><br>
-<button type="button" onclick="set_ls(this, 1);">Acc Tkn: </button> <input type="text" id="elem_acc_tkn" style="width:500px"> 
+<button type="button" onclick="set_ls(this, 1);">Acc Tkn: </button> <input type="text" id="elem_acc_tkn" style="width:270px"> 
 <br><br>
-<button type="button" onclick="set_ls(this, 1);">Dttm Exp: </button> <input  type="text" id="elem_dttm_exp" style="width:315px">  
-
+<button type="button" onclick="set_ls(this, 1);">Dttm Exp: </button> <input  type="text" id="elem_dttm_exp" style="width:270px">  
+<br><br>
+<br><br>
+<button type="button" onclick="reset_dttm(this);">Reset Date</button>
+<button type="button" onclick="test(this);">Test</button>
+<span style="font-weight:bold;font-style:italic;">Tkn</span>
 <script>
 
 function set_ls(elem, opt)
@@ -43,6 +48,21 @@ elem_client_secret.value = localStorage.getItem(pref_app + "_client_secret") || 
 elem_ref_tkn.value = localStorage.getItem(pref_app + "_" + get_usr() + "_ref_tkn") || ""; 
 elem_acc_tkn.value = localStorage.getItem(pref_app + "_" + get_usr() + "_acc_tkn") || ""; 
 elem_dttm_exp.value = localStorage.getItem(pref_app + "_" + get_usr() + "_dttm_exp") || ""; 
+}
+
+function test(elem)
+{
+ get_tkn(t => {
+    elem.nextElementSibling.innerHTML = t;
+ }, pref_app, get_usr());
+
+}
+
+function reset_dttm()
+{
+ var dt_now = new Date();
+ elem_dttm_exp.value = dt_now.toString();
+ localStorage.setItem(pref_app + "_" + get_usr() + "_dttm_exp", dt_now.toString());
 }
 
 var pref_app = "gw";
