@@ -10,30 +10,43 @@
 
 <body>
 <span>User: </span><input type="text" id="elem_user_id" style="width:50px" onfocusout="load_tkn_val();" value="4">
-<span id="elem_app" style="font-weight:bold;font-style:italic;color:blue;"></span>
+<span id="elem_app" style="font-weight:bold;font-style:italic;color:blue;margin-left:25px;"></span>
+<button type="button" style="margin-left:25px;" onclick="this.nextElementSibling.click()">Conf</button>
+<input type="file" accept=".json, .txt" style="display:none" onchange="read_conf(this);">
+<pre id="elem_props"></pre>
 <br><br>
-<button type="button" onclick="set_ls(this);">Client ID: </button> <input type="text" id="elem_client_id" style="width:270px"> 
+<input type="text" id="elem_client_id" style="width:270px" disabled> 
 <br><br>
-<button type="button" onclick="set_ls(this);">Client Secret: </button> <input type="text" id="elem_client_secret" style="width:270px"> 
+<input type="text" id="elem_client_secret" style="width:270px" disabled> 
 <br><br>
-<button type="button" onclick="set_ls(this, 1);">Ref Tkn: </button> <input type="text" id="elem_ref_tkn" style="width:270px"> 
+<input type="text" id="elem_ref_tkn" style="width:270px" disabled> 
 <br><br>
-<button type="button" onclick="set_ls(this, 1);">Acc Tkn: </button> <input type="text" id="elem_acc_tkn" style="width:270px"> 
+<input type="text" id="elem_acc_tkn" style="width:270px" disabled> 
 <br><br>
-<button type="button" onclick="set_ls(this, 1);">Dttm Exp: </button> <input  type="text" id="elem_dttm_exp" style="width:270px">  
+<input  type="text" id="elem_dttm_exp" style="width:270px" disabled>  
 <br><br>
 <br><br>
 <button type="button" onclick="reset_dttm(this);">Reset Date</button>
 <button type="button" onclick="test(this);">Test</button>
 <span style="font-weight:bold;font-style:italic;">Tkn</span>
+
 <script>
 
-function set_ls(elem, opt)
+function read_conf(elem)
 {
- if ((elem_user_id.value.trim() == "") && (opt)) return alert("Empty User...");
- var elem_nxt = elem.nextElementSibling;
- var pref_ls = (opt) ? pref_app + "_" + get_usr() + "_" : pref_app + "_";
- localStorage.setItem(pref_ls + elem_nxt.id.replace("elem_", ""), elem_nxt.value.trim()); 
+const reader = new FileReader();
+reader.readAsText(elem.files[0], "UTF-8");
+reader.onload = (event) => {
+ var conf_txt = event.target.result;
+ var conf_obj = JSON.parse(conf_txt);
+ var conk_keys_arr = Object.keys(conf_obj);
+ conk_keys_arr.forEach(k => localStorage.setItem(k, conf_obj[k])); 
+ var html_props = "Confs: <br>";
+ for (i = 0; i < conk_keys_arr.length; i++) html_props += conk_keys_arr[i] + " => " + localStorage.getItem(conk_keys_arr[i]) + "<br>";
+ elem_props.innerHTML = html_props; 
+}
+reader.onerror = (error) => alert("error reading file");
+elem.previousElementSibling.innerHTML = "OK";
 }
 
 function get_usr()
@@ -52,6 +65,7 @@ elem_dttm_exp.value = localStorage.getItem(pref_app + "_" + get_usr() + "_dttm_e
 
 function test(elem)
 {
+ if (elem_ref_tkn.value == "" || elem_acc_tkn.value == "" || elem_dttm_exp.value == "") return alert("Empty...");
  get_tkn(t => {
     elem.nextElementSibling.innerHTML = t;
  }, pref_app, get_usr());

@@ -103,6 +103,18 @@ function edit_file()
  });
 }
 
+function new_file()
+{
+ get_tkn(t => { 
+
+ var metadata = {"name": "t_" + (new Date()).getTime() + ".txt","mimeType": "text/plain","parents": [m_sid]};
+ var arr = [11,"metadata",new Blob([JSON.stringify(metadata)], {type: "application/json"}),
+              "file", new Blob(["new\r\nfile\r\nfrom api"], {type: "text/plain"}) ];
+ ajax_r(url_gd_file_new(), arr, (a) => alert(a.id), ["a2",t]);
+ 
+ });
+}
+
 
 function down_blob()
 {
@@ -124,8 +136,12 @@ function show_opts()
  elem_menu_opts.innerHTML = "";
 
  add_opts_it(elem_menu_opts, "Info: " + cch[m_sid]["files"].length + " Files");
+ add_opts_it(elem_menu_opts, "New File", () => {
+   new_file();
+   elem_msg.style.display = "none";
+  });
 
-  if (lst_id_file != "" && cch[lst_id_file]["url"]) add_opts_it(elem_menu_opts, "Download", () => {
+ if (lst_id_file != "" && cch[lst_id_file]["url"]) add_opts_it(elem_menu_opts, "Download", () => {
    down_blob();
    elem_msg.style.display = "none";
   });
@@ -246,6 +262,11 @@ function url_gd_view_folder(id)
 function url_gd_file_upd(id)
 {
  return `https://www.googleapis.com/upload/drive/v3/files/${id}?uploadType=media`;
+}
+
+function url_gd_file_new()
+{
+ return `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id`;
 }
 
 
