@@ -109,7 +109,7 @@ function new_file()
 
  var metadata = {"name": "t_" + (new Date()).getTime() + ".txt","mimeType": "text/plain","parents": [m_sid]};
  var arr = [11,"metadata",new Blob([JSON.stringify(metadata)], {type: "application/json"}),
-              "file", new Blob(["new\r\nfile\r\nfrom api"], {type: "text/plain"}) ];
+              "file", new Blob(["new file\r\nfrom api"], {type: "text/plain"}) ];
  ajax_r(url_gd_file_new(), arr, (a) => alert(a.id), ["a2",t]);
  
  });
@@ -274,13 +274,13 @@ var cch = {};
 var lst_id_file = "";
 var m_sid = get_p("sid").substring(1);
 
-get_tkn(t => {
+if (m_sid != "") get_tkn(t => {
 
 var m_fid = get_p("fid").substring(1);
 var arg_n = get_p("n");
 var root_name = (arg_n == "") ? "." : arg_n;
 
-if (m_sid != ""){
+
  cch[m_sid] = {};
  cch[m_sid]["name"] = root_name;
  ajax_r(url_gd_list_files(m_sid) , 0,
@@ -300,8 +300,6 @@ if (m_sid != ""){
      }); 
   });
  }, ["a2", t]);
-}
-
 
 });
 

@@ -77,7 +77,7 @@ function ajax_r(url, args, fn_suc, hdrs, tp_res)
  if (tp_res && tp_res.startsWith("b")) xhr.responseType = "blob"; 
  if (tp_res && tp_res.startsWith("t")) xhr.responseType = "text"; 
 
- var _fn_err = x => {alert(0); console.log(x)};
+ var _fn_err = x => {alert(`REQUEST_ERROR\n\n${x.status}\n\n${x.response}`); console.log(x)};
  var _fn_suc = fn_suc || (x => console.log(x));
 
  var fn_aux_hdr = (xhr_a, hdrs_a) => {
