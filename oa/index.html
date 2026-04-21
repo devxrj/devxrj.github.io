@@ -11,26 +11,35 @@
 <body>
 <span>User: </span><input type="text" id="elem_user_id" style="width:50px" onfocusout="load_tkn_val();" value="4">
 <span id="elem_app" style="font-weight:bold;font-style:italic;color:blue;margin-left:25px;"></span>
-<button type="button" style="margin-left:25px;" onclick="this.nextElementSibling.click()">Conf</button>
+<br><br>
+<span onclick="this.nextElementSibling.disabled = 0;">Prop1: </span> <input type="text" id="elem_client_id" style="width:270px" onfocusout="set_ls(this,1);" disabled> 
+<br><br>
+<span onclick="this.nextElementSibling.disabled = 0;">Prop2: </span> <input type="text" id="elem_client_secret" style="width:270px" onfocusout="set_ls(this,1);" disabled> 
+<br><br>
+<span onclick="this.nextElementSibling.disabled = 0;">Prop3: </span>  <input type="text" id="elem_ref_tkn" style="width:270px" onfocusout="set_ls(this,1);" disabled> 
+<br><br>
+<span onclick="this.nextElementSibling.disabled = 0;">Prop4: </span><input type="text" id="elem_acc_tkn" style="width:270px" onfocusout="set_ls(this,1);" disabled> 
+<br><br>
+<span onclick="this.nextElementSibling.disabled = 0;">Prop5: </span><input  type="text" id="elem_dttm_exp" style="width:270px" onfocusout="set_ls(this,1);" disabled>  
+<br><br><br>
+<button type="button" onclick="this.nextElementSibling.click()">Up Conf</button>
 <input type="file" accept=".json, .txt" style="display:none" onchange="read_conf(this);">
 <pre id="elem_props"></pre>
-<br><br>
-<input type="text" id="elem_client_id" style="width:270px" disabled> 
-<br><br>
-<input type="text" id="elem_client_secret" style="width:270px" disabled> 
-<br><br>
-<input type="text" id="elem_ref_tkn" style="width:270px" disabled> 
-<br><br>
-<input type="text" id="elem_acc_tkn" style="width:270px" disabled> 
-<br><br>
-<input  type="text" id="elem_dttm_exp" style="width:270px" disabled>  
-<br><br>
-<br><br>
-<button type="button" onclick="reset_dttm(this);">Reset Date</button>
+<br>
 <button type="button" onclick="test(this);">Test</button>
 <span style="font-weight:bold;font-style:italic;">Tkn</span>
 
 <script>
+
+function set_ls(elem, opt)
+{
+ if (opt){
+  elem.disabled = 1;
+  return localStorage.setItem(pref_app + "_" + get_usr() + "_" + elem.id.replace("elem_", ""), elem.value.trim()); 
+ }
+ var elem_nxt = elem.nextElementSibling;
+ localStorage.setItem(pref_app + "_" + elem_nxt.id.replace("elem_", ""), elem_nxt.value.trim()); 
+}
 
 function read_conf(elem)
 {
@@ -70,13 +79,6 @@ function test(elem)
     elem.nextElementSibling.innerHTML = t;
  }, pref_app, get_usr());
 
-}
-
-function reset_dttm()
-{
- var dt_now = new Date();
- elem_dttm_exp.value = dt_now.toString();
- localStorage.setItem(pref_app + "_" + get_usr() + "_dttm_exp", dt_now.toString());
 }
 
 var pref_app = "gw";

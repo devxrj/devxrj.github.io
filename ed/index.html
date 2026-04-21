@@ -136,6 +136,13 @@ function show_opts()
  elem_menu_opts.innerHTML = "";
 
  add_opts_it(elem_menu_opts, "Info: " + cch[m_sid]["files"].length + " Files");
+
+ add_opts_it(elem_menu_opts, "Cache File List", () => {
+   localStorage.setItem("cont_" + m_sid, JSON.stringify(cch[m_sid].files));
+   alert(localStorage.getItem("cont_" + m_sid));
+   elem_msg.style.display = "none";
+  });
+
  add_opts_it(elem_menu_opts, "New File", () => {
    new_file();
    elem_msg.style.display = "none";
@@ -278,7 +285,7 @@ if (m_sid != "") get_tkn(t => {
 
 var m_fid = get_p("fid").substring(1);
 var arg_n = get_p("n");
-var root_name = (arg_n == "") ? "." : arg_n;
+var root_name = (arg_n == "") ? m_sid : arg_n;
 
 
  cch[m_sid] = {};

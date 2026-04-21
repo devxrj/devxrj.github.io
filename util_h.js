@@ -73,11 +73,9 @@ function ajax_r(url, args, fn_suc, hdrs, tp_res)
 {
  var xhr = new XMLHttpRequest();
 
- if (!tp_res || tp_res.startsWith("j")) xhr.responseType = "json"; 
  if (tp_res && tp_res.startsWith("b")) xhr.responseType = "blob"; 
- if (tp_res && tp_res.startsWith("t")) xhr.responseType = "text"; 
 
- var _fn_err = x => {alert(`REQUEST_ERROR\n\n${x.status}\n\n${x.response}`); console.log(x)};
+ var _fn_err = x => {alert(`REQUEST_ERROR (${x.status})\n\n${(x.responseType == "blob") ? "" : x.responseText}`); console.log(x)};
  var _fn_suc = fn_suc || (x => console.log(x));
 
  var fn_aux_hdr = (xhr_a, hdrs_a) => {
@@ -102,7 +100,7 @@ function ajax_r(url, args, fn_suc, hdrs, tp_res)
  }
 
  var fn_aux_b2 = (xhr_a) => {
-  var cont_disp = xhr_a.getResponseHeader("content-disposition"); //attachment; filename=test.csv
+  var cont_disp = xhr_a.getResponseHeader("content-disposition");
   if (!cont_disp) return "x"; 
   return cont_disp.split("=")[1].trim();
  }
@@ -113,6 +111,7 @@ function ajax_r(url, args, fn_suc, hdrs, tp_res)
      if (xhr.response == null) return _fn_err(xhr);
      if (tp_res && tp_res.endsWith("x")) return _fn_suc(xhr);
      if (tp_res == "b2") return _fn_suc([fn_aux_b2(xhr), xhr.response]);
+     if (!tp_res || tp_res.startsWith("j")) try {return _fn_suc(JSON.parse(xhr.responseText))} catch (_) {return _fn_err(xhr)};
      _fn_suc(xhr.response);
      }
  }
@@ -136,17 +135,12 @@ function ajax_r(url, args, fn_suc, hdrs, tp_res)
   return xhr.send(fn_aux_data(args, 11));
  }
 
- if (args[0] == 111){
-  xhr.open("POST", url, true);
-  fn_aux_hdr(xhr, hdrs);
-  return xhr.send(args[1]);
- }
-
  xhr.open(args[0], url, true);
  fn_aux_hdr(xhr, hdrs);
  if (args.length == 1) return xhr.send();
  return xhr.send(args[1]);
 }
+
 
 
 function get_tkn(fn, pref, usr)
@@ -168,8 +162,9 @@ function get_tkn(fn, pref, usr)
   console.log(a);
   var d_now = new Date();
   d_now.setSeconds(d_now.getSeconds() + a.expires_in);
+  var d_end = new Date(d_now.setHours(d_now.getHours()-3)).toISOString().slice(0, 19).replace("T"," ");
   localStorage.setItem(app_pref + "_" + app_usr + "_acc_tkn", a.access_token); 
-  localStorage.setItem(app_pref + "_" + app_usr + "_dttm_exp", d_now.toString());
+  localStorage.setItem(app_pref + "_" + app_usr + "_dttm_exp", d_end);
   fn(a.access_token);
  }); 
 }
