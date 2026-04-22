@@ -4,3 +4,4 @@
 
 - Link View
 - Edit Txt Files (Cloud)
+- Random File View (Cloud)
