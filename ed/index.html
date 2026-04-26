@@ -6,6 +6,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="/util_h.js"></script>
+<script src="/cloud_h.js"></script>
 </head>
 
 <body style="background-color:white;">
@@ -23,7 +24,7 @@
  <div id="elem_ed" style="display:none;text-align:left;">
  <textarea id="elem_ta" style="width:100%;" spellcheck="false"></textarea>
  <br>
- <button id="elem_btn_atualizar" onclick="edit_file();">Update</button>
+ <button id="elem_btn_atualizar" onclick="edit_file_c();">Update</button>
  <span id="elem_ed_res" style="margin-left:5px"></span>
  </div>
 
@@ -66,14 +67,12 @@ function get_file(id)
 
  if (cch[id]["url"]) return get_file_aux(id);
 
- get_tkn(t => {
-  ajax_r(url_gd_file_byte(id), 0,
-  (data) => {
+  read_file(id, (data) => {
   cch[id]["blob"] = data;
   cch[id]["url"] = URL.createObjectURL(data);
   get_file_aux(id);
-  }, ["a2", t], "b");
- });
+  });
+
 }
 
 function get_file_aux(id)
@@ -93,36 +92,24 @@ function get_file_aux(id)
 
 }
 
-function edit_file()
+function edit_file_c()
 {
- get_tkn(t => { 
-
- const blob_ta = new Blob([elem_ta.value.trim().replaceAll("\n","\r\n")], {type: "text/plain"});
- ajax_r(url_gd_file_upd(lst_id_file), ["PATCH", blob_ta], a => elem_ed_res.innerHTML = (new Date()).getMilliseconds(),["a2", t, "ct", blob_ta.type]);
- 
- });
+ edit_file(lst_id_file, elem_ta.value.trim(), rd => {elem_ed_res.innerHTML = (new Date()).getMilliseconds(); console.log(rd);});
 }
 
-function new_file()
+function new_file_c()
 {
- get_tkn(t => { 
-
- var metadata = {"name": "t_" + (new Date()).getTime() + ".txt","mimeType": "text/plain","parents": [m_sid]};
- var arr = [11,"metadata",new Blob([JSON.stringify(metadata)], {type: "application/json"}),
-              "file", new Blob(["new file\r\nfrom api"], {type: "text/plain"}) ];
- ajax_r(url_gd_file_new(), arr, (a) => alert(a.id), ["a2",t]);
- 
- });
+ new_file(id_m, new Date().getTime() + ".txt", "new file\nfrom api", (rd) => alert(JSON.stringify(rd, null, 2)));
 }
 
 
 function down_blob()
 {
- var a = document.createElement("a");
- a.href =  cch[lst_id_file]["url"]; 
- a.download = elem_ta.title;
- a.click();
- a.remove();
+ var elem_a = document.createElement("a");
+ elem_a.href =  cch[lst_id_file]["url"]; 
+ elem_a.download = elem_ta.title;
+ elem_a.click();
+ elem_a.remove();
 }
 
 
@@ -135,16 +122,16 @@ function show_opts()
 {
  elem_menu_opts.innerHTML = "";
 
- add_opts_it(elem_menu_opts, "Info: " + cch[m_sid]["files"].length + " Files");
+ add_opts_it(elem_menu_opts, "Info: " + cch[id_m]["files"].length + " Files");
 
  add_opts_it(elem_menu_opts, "Cache File List", () => {
-   localStorage.setItem("cont_" + m_sid, JSON.stringify(cch[m_sid].files));
-   alert(localStorage.getItem("cont_" + m_sid));
+   localStorage.setItem("cont_" + id_m, JSON.stringify(cch[id_m].files));
+   alert(localStorage.getItem("cont_" + id_m));
    elem_msg.style.display = "none";
   });
 
  add_opts_it(elem_menu_opts, "New File", () => {
-   new_file();
+   new_file_c();
    elem_msg.style.display = "none";
   });
 
@@ -154,7 +141,7 @@ function show_opts()
   });
  
  add_opts_it(elem_menu_opts, get_lnk_blb(lst_id_file), dvclnk);
- add_opts_it(elem_menu_opts, get_lnk_gd_dir(m_sid), dvclnk);
+ add_opts_it(elem_menu_opts, get_lnk_gd_dir(id_m), dvclnk);
  add_opts_it(elem_menu_opts, get_lnk_gd_file(lst_id_file), dvclnk);
  add_opts_it(elem_menu_opts, get_lnk_ext(lst_id_file), dvclnk);
 
@@ -214,20 +201,20 @@ function get_lnk_gd_file(id)
 {
  if (id == "") return "";
  var url_gd = url_gd_view_file(id);
- var fn = cch[id]["name"];
- var cnf = get_config(fn.substring(0,fn.lastIndexOf(".")));
- var fn_display = cnf[1] + fn.substring(fn.lastIndexOf("."));
+ var file_nm = cch[id]["name"];
+ var cnf = get_config(file_nm.substring(0,file_nm.lastIndexOf(".")));
+ var file_nm_display = cnf[1] + file_nm.substring(file_nm.lastIndexOf("."));
  return `
    <img src="${get_ico_lnk(url_gd)}" width="16" height="16" style="vertical-align:middle;margin-right:5px;" onerror="this.src='${get_ico_lnk(0)}'">
-   <a target="_blank" href="${url_gd}">${fn_display}</a>  
+   <a target="_blank" href="${url_gd}">${file_nm_display}</a>  
    `;
 }
 
 function get_lnk_ext(id)
 {
  if (id == "") return "";
- var fn = cch[id]["name"];
- var cnf = get_config(fn.substring(0,fn.lastIndexOf(".")));
+ var file_nm = cch[id]["name"];
+ var cnf = get_config(file_nm.substring(0,file_nm.lastIndexOf(".")));
  var href_ext = cnf[2];
  return (cnf[0] == 1) ? "" : `
    <img src="${get_ico_lnk(href_ext)}" width="16" height="16" style="vertical-align:middle;margin-right:5px;" onerror="this.src='${get_ico_lnk(0)}'">
@@ -236,79 +223,35 @@ function get_lnk_ext(id)
 }
 
 
-function url_gd_list_all(id)
-{
- return `https://www.googleapis.com/drive/v3/files?q=%27${id}%27+in+parents+and+trashed%3Dfalse&fields=files(id,name,mimeType)&orderBy=name&pageSize=1000`
-}
-
-function  url_gd_list_files(id)
-{
- return `https://www.googleapis.com/drive/v3/files?q=%27${id}%27+in+parents+and+trashed%3Dfalse+and+mimeType!%3D%27application/vnd.google-apps.folder%27&fields=files(id,name)&orderBy=name&pageSize=1000`
-}
-
-function url_gd_file_info(id)
-{
- return `https://www.googleapis.com/drive/v3/files/${id}`;
-}
-
-function url_gd_file_byte(id)
-{
- return `https://www.googleapis.com/drive/v3/files/${id}?alt=media`;
-}
-
-function url_gd_view_file(id)
-{
- return `https://drive.google.com/file/d/${id}/view`;
-}
-
-function url_gd_view_folder(id)
-{
- return `https://drive.google.com/drive/folders/${id}`;
-}
-
-function url_gd_file_upd(id)
-{
- return `https://www.googleapis.com/upload/drive/v3/files/${id}?uploadType=media`;
-}
-
-function url_gd_file_new()
-{
- return `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id`;
-}
-
-
 var cch = {};
 var lst_id_file = "";
-var m_sid = get_p("sid").substring(1);
+var id_m = get_p("id");
 
-if (m_sid != "") get_tkn(t => {
+if (id_m != ""){
 
-var m_fid = get_p("fid").substring(1);
 var arg_n = get_p("n");
-var root_name = (arg_n == "") ? m_sid : arg_n;
+var root_name = (arg_n == "") ? id_m : arg_n;
+cch[id_m] = {};
+cch[id_m]["name"] = root_name;
 
-
- cch[m_sid] = {};
- cch[m_sid]["name"] = root_name;
- ajax_r(url_gd_list_files(m_sid) , 0,
- (data) => { 
- elem_cont.style.display = "block";
- var tab = data["files"].filter(o => !o["name"].startsWith("--") && is_txt(o["name"]));
- cch[m_sid]["files"] = tab;
- tab.forEach(o => {
-   cch[o["id"]] = {};
-   cch[o["id"]]["name"] = o["name"];
-   var fn = o["name"];
-   var cnf = get_config(fn.substring(0,fn.lastIndexOf(".")));
-   add_opts_it(elem_menu_opts2, cnf[1], (d) => {
-     d.firstElementChild.style.color = "blue";
-     get_file(o["id"]);
-     elem_msg2.style.display = "none";
-     }); 
-  });
- }, ["a2", t]);
-
+list_files(id_m, (data) => { 
+elem_cont.style.display = "block";
+var tab = data["files"].filter(o => !o["name"].startsWith("--") && is_txt(o["name"]));
+cch[id_m]["files"] = tab;
+tab.forEach(ob => {
+  cch[ob["id"]] = {};
+  cch[ob["id"]]["name"] = ob["name"];
+  var file_nm = ob["name"];
+  var cnf = get_config(file_nm.substring(0,file_nm.lastIndexOf(".")));
+  add_opts_it(elem_menu_opts2, cnf[1], (elemp_d) => {
+    elemp_d.firstElementChild.style.color = "blue";
+    get_file(ob["id"]);
+    elem_msg2.style.display = "none";
+    }); 
+ });
 });
+
+}
 
 
 
