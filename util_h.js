@@ -99,24 +99,17 @@ function ajax_r(url, args, fn_suc, hdrs, tp_res)
   return fd;
  }
 
- var fn_aux_b2 = (xhr_a) => {
-  var cont_disp = xhr_a.getResponseHeader("content-disposition");
-  if (!cont_disp) return "x"; 
-  return cont_disp.split("=")[1].trim();
- }
-
  xhr.onreadystatechange = () => {
      if (xhr.readyState == 4){
      if (xhr.status != 200) return _fn_err(xhr);
      if (xhr.response == null) return _fn_err(xhr);
      if (tp_res && tp_res.endsWith("x")) return _fn_suc(xhr);
-     if (tp_res == "b2") return _fn_suc([fn_aux_b2(xhr), xhr.response]);
      if (!tp_res || tp_res.startsWith("j")) try {return _fn_suc(JSON.parse(xhr.responseText))} catch (_) {return _fn_err(xhr)};
      _fn_suc(xhr.response);
      }
  }
 
- if (!args){
+ if (args == 0){
   xhr.open("GET", url, true);
   fn_aux_hdr(xhr, hdrs);
   return xhr.send();
