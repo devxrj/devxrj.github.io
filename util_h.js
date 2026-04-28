@@ -1,3 +1,8 @@
+function is_mob()
+{ 
+ return (screen.width < 600); 
+}
+
 function get_lnk(str)
 {
  var spc_ind = str.indexOf(" ");

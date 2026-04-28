@@ -48,11 +48,6 @@
 
 <script>
 
-function is_mob()
-{ 
- return (screen.width < 600); 
-}
-
 function is_txt(fn)
 {
  return ["txt", "html", "htm", "xml"].includes(fn.split(".").pop().toLowerCase());
@@ -183,7 +178,7 @@ function get_lnk_blb(id)
  if ((id == "") || (cch[id]["url"] == undefined)) return "";
  return `
    <img src="${get_ico_lnk(1)}" width="16" height="16" style="vertical-align:middle;margin-right:5px;" onerror="this.src='${get_ico_lnk(0)}'">
-   <a target="_blank" href="${cch[id]["url"]}">Lnk Blob</a>
+   <a target="_blank" href="${cch[id]["url"]}">Blob Link</a>
    `;
 }
 
@@ -230,7 +225,7 @@ var id_m = get_p("id");
 if (id_m != ""){
 
 var arg_n = get_p("n");
-var root_name = (arg_n == "") ? id_m : arg_n;
+var root_name = (arg_n == "") ? "Initial Dir" : arg_n;
 cch[id_m] = {};
 cch[id_m]["name"] = root_name;
 

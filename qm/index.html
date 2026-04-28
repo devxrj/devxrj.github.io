@@ -5,6 +5,8 @@
 <title>RndFile</title>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/util_h.js"></script>
+<script src="/cloud_h.js"></script>
 </head>
 
 <body style="background-color:white;">
@@ -39,13 +41,7 @@
 </div>
 
 
-<script src="/utilh.js"></script>
 <script>
-
-function is_mob()
-{ 
- return (screen.width < 600); 
-}
 
 function is_img(fn)
 {
@@ -73,8 +69,7 @@ function set_url(elem)
  }
 
 
- r_ajax(url_gd_list_files(lst_id_dir), 0,
- (data) => {   
+ list_files(lst_id_dir, (data) => {   
 
    var files_f = data["files"].filter(o => !o["name"].startsWith("--"));
    cch[lst_id_dir]["files"] = files_f;
@@ -86,7 +81,7 @@ function set_url(elem)
    get_file(elem_rnd.id);
    elem_msg2.style.display = "none";
 
- }, (a,b) => alert(0));
+ });
 
 }
 
@@ -108,12 +103,11 @@ function get_file(id)
 
  if (!is_img_or_txt || cch[id]["url"]) return get_file_aux(id);
 
- r_ajax(url_gd_file_byte(id),0,
- (data) => {
+ read_file(id, (data) => {
  cch[id]["url"] = URL.createObjectURL(data);
  get_file_aux(id);
- },
- (a) => console.log(a), "blob");
+ });
+
 }
 
 function get_file_aux(id)
@@ -179,7 +173,7 @@ function set_random_r()
 
 function show_opts_m()
 {
- if (m_id == "" && m_sid == "") return;
+ if (id_m == "" && sid_m == "") return;
  elem_msg2.style.display='block';
 }
 
@@ -238,14 +232,14 @@ if (arg_r != "" && arg_r != "1") add_opts_it(elem_menu_opts, "Rnd (URL::" + arg_
   elem_msg.style.display = "none";
 });
 
- if (m_id != ""){
+ if (id_m != ""){
  add_opts_it(elem_menu_opts, "Rnd (All)", () => { 
   set_random(d => true);
   elem_msg.style.display = "none";
  });
  }
 
- if (m_id.startsWith("10BCQm")){
+ if (id_m.startsWith("10BCQm")){
 
   add_opts_it(elem_menu_opts, "Rnd (9A)", () => {
       set_random(d => d.firstElementChild.innerHTML.startsWith("_"));
@@ -266,19 +260,19 @@ if (arg_r != "" && arg_r != "1") add_opts_it(elem_menu_opts, "Rnd (URL::" + arg_
 
  }
 
- if (m_sid != ""){
-  add_opts_it(elem_menu_opts, "Info: " + cch[m_sid]["files"].length + " Files");
+ if (sid_m != ""){
+  add_opts_it(elem_menu_opts, "Info: " + cch[sid_m]["files"].length + " Files");
   add_opts_it(elem_menu_opts, get_lnk_blb(lst_id_file), dvclnk);
-  add_opts_it(elem_menu_opts, get_lnk_gd_dir(m_sid), dvclnk);
+  add_opts_it(elem_menu_opts, get_lnk_gd_dir(sid_m), dvclnk);
  }
 
- if (lst_id_dir == "" && m_id != ""){
-  if (cch[m_id]["files"]) add_opts_it(elem_menu_opts, get_lnk_sel(m_id), dvclnk);
-  add_opts_it(elem_menu_opts, get_lnk_gd_dir(m_id), dvclnk);
+ if (lst_id_dir == "" && id_m != ""){
+  if (cch[id_m]["files"]) add_opts_it(elem_menu_opts, get_lnk_sel(id_m), dvclnk);
+  add_opts_it(elem_menu_opts, get_lnk_gd_dir(id_m), dvclnk);
  }
 
  add_opts_it(elem_menu_opts, get_lnk_sel(lst_id_dir), dvclnk);
- if (m_sid == "") add_opts_it(elem_menu_opts, get_lnk_blb(lst_id_file), dvclnk);
+ if (sid_m == "") add_opts_it(elem_menu_opts, get_lnk_blb(lst_id_file), dvclnk);
  add_opts_it(elem_menu_opts, get_lnk_gd_dir(lst_id_dir), dvclnk);
  add_opts_it(elem_menu_opts, get_lnk_gd_file(lst_id_file), dvclnk);
  add_opts_it(elem_menu_opts, get_lnk_ext(lst_id_file), dvclnk);
@@ -361,94 +355,27 @@ function get_lnk_ext(id)
 }
 
 
-function url_gd_list_all(id)
-{
- return `https://www.googleapis.com/drive/v3/files?q=%27${id}%27+in+parents+and+trashed%3Dfalse&key=${api_key}&fields=files(id,name,mimeType)&orderBy=name&pageSize=1000`
-}
-
-function  url_gd_list_files(id)
-{
- return `https://www.googleapis.com/drive/v3/files?q=%27${id}%27+in+parents+and+trashed%3Dfalse+and+mimeType!%3D%27application/vnd.google-apps.folder%27&key=${api_key}&fields=files(id,name)&orderBy=name&pageSize=1000`
-}
-
-function url_gd_file_info(id)
-{
- return `https://www.googleapis.com/drive/v3/files/${id}?key=${api_key}`;
-}
-
-function url_gd_file_byte(id)
-{
- return `https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${api_key}`;
-}
-
-function url_gd_view_file(id)
-{
- return `https://drive.google.com/file/d/${id}/view`;
-}
-
-function url_gd_view_folder(id)
-{
- return `https://drive.google.com/drive/folders/${id}`;
-}
-
-function r_ajax(url, args, fn_suc, fn_err, tp_res)
-{
- var xhr = new XMLHttpRequest();
-
- xhr.responseType = (tp_res == undefined) ? "json" : tp_res;
- 
- var _fn_err = (fn_err == null || fn_err == undefined) ? (o) => console.log(o) : fn_err;
-
- xhr.onreadystatechange = () => {
-     if (xhr.readyState == 4){
-     if (xhr.status != 200) {_fn_err(xhr); return;}
-     if (xhr.response == null) {_fn_err(xhr); return;}
-     fn_suc(xhr.response);
-     }
- }
-
- if (typeof args == "number"){
-  xhr.open("GET", url, true);
-  xhr.send();
-  return;
-  };
-
- if (typeof args == "string"){
-  xhr.open("POST", url, true);
-  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  xhr.send(args);
-  return;
- }
-
- if (typeof args == "object"){
-  xhr.open("POST", url, true);
-  xhr.send(args);
- }
-
-}
-
-var api_key = 'AIzaSyC4oGvGvMehPLyCwPoWMng-4NYD-2oLGbA';
 var cch = {};
 var lst_id_dir = "";
 var lst_id_file = "";
-var m_id = getp("id").substring(1);
-var m_sid = getp("sid").substring(1);
-var arg_r = getp("r");
+var id_m = get_p("id");
+var sid_m = get_p("sid");
+var arg_r = get_p("r");
 
 (() => {
 
-var m_fid = getp("fid").substring(1);
-var arg_n = getp("n");
-var root_name = (arg_n == "") ? "." : arg_n;
+var fid_m = get_p("fid");
+var arg_n = get_p("n");
+var root_name = (arg_n == "") ? "Initial Dir" : arg_n;
 
-if (m_sid != ""){
- cch[m_sid] = {};
- cch[m_sid]["name"] = root_name;
- r_ajax(url_gd_list_files(m_sid) , 0,
- (data) => { 
+if (sid_m != ""){
+ cch[sid_m] = {};
+ cch[sid_m]["name"] = root_name;
+
+list_files(id_m, (data) => { 
  elem_cont.style.display = "block";
  var tab = data["files"].filter(o => !o["name"].startsWith("--"));
- cch[m_sid]["files"] = tab;
+ cch[sid_m]["files"] = tab;
  tab.forEach(o => {
    cch[o["id"]] = {};
    cch[o["id"]]["name"] = o["name"];
@@ -460,40 +387,41 @@ if (m_sid != ""){
      elem_msg2.style.display = "none";
      }); 
   });
- },(a,b) => alert(0));
-}
-
-if (m_fid != ""){
- elem_cont.style.display = "block";
- cch[m_fid] = {};
- cch[m_fid]["name"] = arg_n;
-
- if (arg_n != "") return get_file(m_fid);  
-    
- return r_ajax(url_gd_file_info(m_fid), 0, (data) => {
-        cch[m_fid]["name"] = data["name"];
-        get_file(m_fid);
-        }, (a,b) => alert(0));
-};
-
-if (m_id == "") return;
-cch[m_id] = {};
-cch[m_id]["name"] = root_name;
-
-r_ajax(url_gd_list_all(m_id) ,0,
-(data) => {  
- elem_cont.style.display = "block";
- var tab = data["files"].filter(o => !o["name"].startsWith("--") && o["mimeType"] == "application/vnd.google-apps.folder");
- tab.forEach(o => {
-  cch[o["id"]] = {};
-  cch[o["id"]]["name"] = o["name"];
-  add_opts_it(elem_menu_opts2, o["name"], set_url, o["id"]);
  });
 
- var tab2 = data["files"].filter(o => !o["name"].startsWith("--") && o["mimeType"] != "application/vnd.google-apps.folder");
+
+}
+
+if (fid_m != ""){
+ elem_cont.style.display = "block";
+ cch[fid_m] = {};
+ cch[fid_m]["name"] = arg_n;
+
+ if (arg_n != "") return get_file(fid_m);  
+    
+ return info_file(fid_m, (data) => {
+        cch[fid_m]["name"] = data["name"];
+        get_file(fid_m);
+        });
+};
+
+if (id_m == "") return;
+cch[id_m] = {};
+cch[id_m]["name"] = root_name;
+
+list_all(id_m, (data) => {  
+ elem_cont.style.display = "block";
+ var tab = data["files"].filter(o => !o["name"].startsWith("--") && o["mimeType"] == "application/vnd.google-apps.folder");
+ tab.forEach(ob => {
+  cch[ob["id"]] = {};
+  cch[ob["id"]]["name"] = ob["name"];
+  add_opts_it(elem_menu_opts2, ob["name"], set_url, ob["id"]);
+ });
+
+ var tab2 = data["files"].filter(ob => !ob["name"].startsWith("--") && ob["mimeType"] != "application/vnd.google-apps.folder");
  if (tab2.length != 0) {
-   cch[m_id]["files"] = tab2;
-   add_opts_it(elem_menu_opts2, cch[m_id]["name"] + " (" + tab2.length + ")", set_url, m_id);
+   cch[id_m]["files"] = tab2;
+   add_opts_it(elem_menu_opts2, cch[id_m]["name"] + " (" + tab2.length + ")", set_url, id_m);
  }
 
  document.addEventListener('keydown', (event) => {   
@@ -502,7 +430,8 @@ r_ajax(url_gd_list_all(m_id) ,0,
 
  if (arg_r != "") return set_random_r();
 
-},(a,b) => alert(0));
+});
+
 
 })();
 
