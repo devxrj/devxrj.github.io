@@ -1,4 +1,4 @@
-function is_mob()
+function is_mob() 
 { 
  return (screen.width < 600); 
 }
