@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head> 
+
+<body style="background-color:white;">
+
+<div id="elem_lnks" style="display:none">
+<div>
+<a id="elem_a_edit" style="display:inline-block;width:48%;height:20px;"></a>
+<div style="display:inline-block;width:48%;height:20px;cursor:pointer;" onclick="add_def_items(1);"></div>
+</div>
+<div id="elem_lv"></div>
+</div>
+
+<div id="elem_ed" style="display:none">
+ <button onclick="elem_ta.value=''">Clear</button><br>
+ <textarea id="elem_ta" style="width:100%" spellcheck="false"></textarea>
+ <br>
+ <input id="elem_it_sv" type="text" size="6" >
+ <button style="margin-left:10px" onclick="upd_file_lv();">Update</button>
+ <span id="elem_stt" style="margin-left:5px"></span>
+ <a id="elem_lnk_voltar" style="margin-left:10px">Back</a>
+ <a id="elem_lnk_voltar_rw" style="margin-left:5px;">View</a>
+</div>
+
+<div id="elem_ifc" style="position:fixed;top:0px;left:0px;width:100%;display:none;">
+ <div style="background-color:gray;" onclick="elem_ifc.style.display='none';this.nextElementSibling.src='';"><br></div>
+ <iframe style="width:100%;height:70px;"></iframe>
+</div>
+
+<div id="elem_tb"></div>
+
+<div id="elem_msg" style="display:none;position:fixed;z-index:1;padding-top:50px;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.4);" onclick="if (event.target==this) this.style.display='none';">
+ <div style="color:gray;background-color:#fefefe;margin:auto;border:1px solid #888;width:60%;font-family:arial,sans-serif;font-size:15px;"> 
+        <div style="text-align:center;border-bottom:1px solid;"><span style="color:black">Options</span></div>       
+        <div id="elem_menu_opts" style="max-height:450px;overflow-y:auto;"></div>       
+        <div style="text-align:center;border-top:1px solid;padding:5px;" onclick="elem_msg.style.display='none';"><span style="color:black;cursor:default;">Cancel</span></div> 
+ </div>
+</div>
+
+<div id="elem_msg_ai" style="display:none;position:fixed;z-index:1;padding-top:50px;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.4);" onclick="if (event.target==this) this.style.display='none';">
+ <div style="color:gray;background-color:#fefefe;margin:auto;border:1px solid #888;width:60%;font-family:arial,sans-serif;font-size:15px;">
+ 
+        <div style="text-align:center;border-bottom:1px solid;"><span style="color:black">Add Item</span></div>        
+        <div id="elem_msg_ai_d" style="max-height:450px;overflow-y:auto;padding:5%;">
+        <input id="elem_msg_ai_i0" type="text" size="10" placeholder="Title">
+        <br><br> 
+        <input id="elem_msg_ai_i1" type="text" size="20" placeholder="Url">
+        <br><br>
+        <button onclick="filter_url_ai();">ShortUrl</button>
+        <button onclick="get_title_ai();">SetTitle</button>
+        <button onclick="copy_ai();">Copy</button>
+        <br><br>
+        <input id="elem_msg_ai_i2" type="text" size="6" >
+        <br><br>
+        <button onclick="add_item_ai();">Add Item</button>  <span id="elem_msg_ai_s"></span>
+        <br><br>
+        <a id="elem_msg_ai_a">Voltar</a>    
+        </div> 
+        <div style="text-align:center;border-top:1px solid;padding:5px;" onclick="elem_msg_ai.style.display='none';"><span style="color:black;cursor:default;">Cancel</span></div>
+ 
+ </div>
+</div>
+
+<div id="elem_msg_ri" style="display:none;position:fixed;z-index:1;padding-top:50px;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.4);" onclick="if (event.target==this) this.style.display='none';">
+ <div style="color:gray;background-color:#fefefe;margin:auto;border:1px solid #888;width:60%;font-family:arial,sans-serif;font-size:15px;">
+ 
+        <div style="text-align:center;border-bottom:1px solid;"><span style="color:black">Remove Item</span></div>        
+        <div id="elem_msg_ri_d" style="max-height:450px;overflow-y:auto;padding:5%;">
+        <input id="elem_msg_ri_i" type="text" size="6" >
+        <br><br><span id="elem_msg_ri_spn_descr"></span>
+        <br>
+        <br><button id="elem_msg_ri_btn">Remove Item</button><span id="elem_msg_ri_s"></span>
+        <br><br>
+        <a id="elem_msg_ri_a">Voltar</a>     
+        </div> 
+        <div style="text-align:center;border-top:1px solid;padding:5px;" onclick="elem_msg_ri.style.display='none';"><span style="color:black;cursor:default;">Cancel</span></div>
+ 
+ </div>
+</div>
+
+<div id="elem_set_sz" style="display:none;position:fixed;z-index:1;padding-top:50px;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.4);" onclick="if (event.target==this) this.style.display='none';">
+ <div style="color:gray;background-color:#fefefe;margin:auto;border:1px solid #888;width:60%;font-family:arial,sans-serif;font-size:15px;"> 
+
+        <div style="text-align:center;border-bottom:1px solid;"><span style="color:black">Set Size</span></div>
+        <div style="max-height:450px;overflow-y:auto;padding:5%;">
+        <input type="number" style="width:48px">
+        <button onclick='localStorage.setItem("conf_qtd",this.previousElementSibling.value);alert(localStorage.getItem("conf_qtd"));'>Set</button>
+        <br><br>    
+        </div>  
+        <div style="text-align:center;border-top:1px solid;padding:5px;" onclick="elem_set_sz.style.display='none';"><span style="color:black;cursor:default;">Cancel</span></div>
+ </div>
+</div>
+
+
+<script src="/util_h.js"></script>
+<script src="/cloud_h.js"></script>
+<script src="util.js"></script> 
+</body>
+</html>
