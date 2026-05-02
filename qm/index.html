@@ -372,7 +372,7 @@ if (sid_m != ""){
  cch[sid_m] = {};
  cch[sid_m]["name"] = root_name;
 
-return list_files(id_m, (data) => { 
+return list_files(sid_m, (data) => { 
  elem_cont.style.display = "block";
  var tab = data["files"].filter(o => !o["name"].startsWith("--"));
  cch[sid_m]["files"] = tab;
