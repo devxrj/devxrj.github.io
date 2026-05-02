@@ -322,7 +322,7 @@ function get_lnk_blb(id)
 function get_lnk_sel(id)
 {
  if (id == "") return "";
- var url_s = location.pathname + "?sid=s" + id + "&n=" +  encodeURIComponent(cch[id]["name"]);
+ var url_s = location.pathname + "?sid=" + id + "&n=" +  encodeURIComponent(cch[id]["name"]);
  return `
    <img src="${get_ico_lnk(1)}" width="16" height="16" style="vertical-align:middle;margin-right:5px;" onerror="this.src='${get_ico_lnk(0)}'">
    <a href="${url_s}">Select Mode</a>
