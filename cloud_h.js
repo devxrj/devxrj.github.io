@@ -119,9 +119,20 @@ function del_file(id, fn)
 
 function get_id(file_nm, dir_id)
 {
- var dir_id_f = dir_id || "1imffNttBNpZGvDucmenegfE-RKwWSNLw";
- return JSON.parse(localStorage.getItem("cont_" + dir_id_f)).filter(ob => ob.name == file_nm)[0].id;
+  var dir_id_f = dir_id || "1imffNttBNpZGvDucmenegfE-RKwWSNLw";
+  var dir_ls = localStorage.getItem("dir_" + dir_id_f);
+  if (!dir_ls) return -1;
+  var dir_ls_arr = JSON.parse(dir_ls).files.filter(ob => ob.name == file_nm + ".txt");
+  if (dir_ls_arr.length == 0) return -1;
+  return dir_ls_arr[0].id;
 }
+
+function cache_file_list(dir_id)
+{
+  var dir_id_f = dir_id || "1imffNttBNpZGvDucmenegfE-RKwWSNLw";
+  list_files(dir_id_f, (res) => localStorage.setItem("dir_" + dir_id_f, JSON.stringify(res)));
+}
+
 
 function url_gd_list_all(id)
 {

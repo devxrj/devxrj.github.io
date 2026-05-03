@@ -1,12 +1,17 @@
-var url = "api.php";
 var ls_prefix = "conteudo_";
 var arg_l = get_p("l");
 var ls_key = ls_prefix + arg_l;
-var text = [];
+var text_g = [];
+var id_g = get_id(arg_l);
 
 (() => {
 
   if (arg_l == "") return;
+
+  if (id_g == -1){
+     cache_file_list(); 
+     return alert("Set Cache...");
+  }
   
   elem_a_edit.href = `${get_page_url()}?l=${arg_l}&ed=1&orig=${btoa(location.href)}`;
   
@@ -26,18 +31,15 @@ var text = [];
 
 function upd_file_lv()
 { 
-  var id = get_id(arg_l + ".txt");
-  edit_file(id, elem_ta.value.trim() , (rd) => { loc_rem(ls_key); elem_stt.innerHTML = (new Date()).getMilliseconds();});
+  edit_file(id_g, elem_ta.value.trim() , (rd) => { loc_rem(ls_key); elem_stt.innerHTML = (new Date()).getMilliseconds();});
 }
 
 function get_ed_text()
 {
   elem_lnk_voltar.href = (get_p("orig") == "") ? `${get_page_url()}?l=${arg_l}` : atob(get_p("orig"));
   elem_lnk_voltar_rw.href = `${get_page_url()}?l=${arg_l}`;
-  elem_ta.style.height = is_mob()? "450px" : "500px" ;
-  
-  var id = get_id(arg_l + ".txt");
-  read_file_txt(id,  (res)=> elem_ta.value = res);
+  elem_ta.style.height = is_mob()? "450px" : "500px" ;  
+  read_file_txt(id_g,  (res)=> elem_ta.value = res);
 }
 
 function get_links()
@@ -50,8 +52,7 @@ function get_links()
   return
   }
   
-  var id = get_id(arg_l + ".txt");  
-  read_file_txt(id, (res)=>{
+  read_file_txt(id_g, (res)=>{
     console.log( "--server--" );
     loc_set(ls_key, res);
     get_links_aux(res);
@@ -65,24 +66,24 @@ var tb_show = true;
 var html = "";
 
 if (get_p("rw") == "1") { 
-text = conteudo.replace(/\r\n/g,"\n");
-text = text.trim().split("\n");
-elem_lv.innerHTML = `<div style='margin-left:${is_mob()?"5%":"15%"}'>${text.map(esc_ent_raw).join("<br>")}<br></div>` ;
+text_g = conteudo.replace(/\r\n/g,"\n");
+text_g = text_g.trim().split("\n");
+elem_lv.innerHTML = `<div style='margin-left:${is_mob()?"5%":"15%"}'>${text_g.map(esc_ent_raw).join("<br>")}<br></div>` ;
 set_tb_btn (tb_show);
 return;
 }
 
-text = conteudo.replace(/\r\n/g, "\n");
-text = text.trim().replace(/\n(\s|\n)*\n/g, "\n").split("\n");
+text_g = conteudo.replace(/\r\n/g, "\n");
+text_g = text_g.trim().replace(/\n(\s|\n)*\n/g, "\n").split("\n");
 
-var par_block = get_blocks(text,["(",")"]);
-var com_block_all = get_blocks(text,["/*","*/"]);
-var colc_block_all = get_blocks(text,["[","]"]);
+var par_block = get_blocks(text_g,["(",")"]);
+var com_block_all = get_blocks(text_g,["/*","*/"]);
+var colc_block_all = get_blocks(text_g,["[","]"]);
 
 var com_block_n1 = com_block_all.filter((b) => check_n1(par_block,b));
 var colc_block_n1 = colc_block_all.filter((b) => check_n1(par_block,b));
 var vis_blocks_n1 = com_block_n1.concat(colc_block_n1, par_block);
-var def_block_n1 = get_def_blocks([0,text.length-1], vis_blocks_n1);
+var def_block_n1 = get_def_blocks([0,text_g.length-1], vis_blocks_n1);
 var all_blocks_n1 = def_block_n1.concat(vis_blocks_n1).sort((a, b) => a[0]-b[0]);
 
 all_blocks_n1.forEach ((b) => {
@@ -94,7 +95,7 @@ if (is_in_block (par_block, b)) {
 
  if ((b[1]-b[0]) < 3) return;
  if (lin_is_comm(b[0]+1))  return;
- var lbl_agrup = text[b[0]+1].trim();
+ var lbl_agrup = text_g[b[0]+1].trim();
  var show_expand = false;
  if (lbl_agrup.endsWith("...")) {
   lbl_agrup = lbl_agrup.substring(0, lbl_agrup.length - 3);
@@ -177,12 +178,12 @@ function toggle_agrup(elem)
 
 function lin_is_comm(ind)
 { 
- return text[ind].trim().startsWith("//"); 
+ return text_g[ind].trim().startsWith("//"); 
 }
 
 function get_html_lin(ind)
 {
- var lin_t = text[ind].trim();
+ var lin_t = text_g[ind].trim();
  var sep_conf = lin_t.indexOf(": ");
  var conf_txt = (sep_conf == -1) ? "" : lin_t.substring(0,sep_conf);
  var conf_lnk = (sep_conf == -1) ? lin_t : lin_t.substring(sep_conf+2);
@@ -397,9 +398,7 @@ function remove_item(all_sel_ind)
   });
   index_empty2.sort((a,b) => b-a).forEach ((o) => text_m.splice(o, 1));
 
-
-  var id = get_id(arg_l + ".txt");
-  edit_file(id, text_m.join("\n\n") , (rd) => {loc_rem(ls_key);  elem_msg_ri_s.innerHTML = all_sel_ind.length + " Item(s) Rem.";   });
+  edit_file(id_g, text_m.join("\n\n") , (rd) => {loc_rem(ls_key);  elem_msg_ri_s.innerHTML = all_sel_ind.length + " Item(s) Rem.";   });
 }
 
 function add_item_ai()
@@ -411,10 +410,9 @@ function add_item_ai()
   if (txt0 == "" && txt1 == "") {alert("Empty!"); return;}
   var txt_append = (txt0 == "") ? txt1 : txt0.replace(/,/g, '&#44;') + "," + txt1;
 
-  text.push(txt_append);
+  text_g.push(txt_append);
    
-  var id = get_id(arg_l + ".txt");
-  edit_file(id, text.join("\n\n") , (rd) => {loc_rem(ls_key);  elem_msg_ai_s.innerHTML=(new Date()).getMilliseconds(); });
+  edit_file(id_g, text_g.join("\n\n") , (rd) => {loc_rem(ls_key);  elem_msg_ai_s.innerHTML=(new Date()).getMilliseconds(); });
 }
 
 function util_m(elem) 
@@ -434,7 +432,6 @@ function util_m(elem)
  if (elem.id == "it_opc5"){   
   if (is_mob()) elem_msg_ai.children[0].style.width = "85%";
   elem_msg_ai_d.onclick = () => { elem_msg_ai_a.href=get_page_url() + "?l=" + arg_l + "&ge=1"; }
-  elem_msg_ai_s.innerHTML = "";
   elem_msg_ai.style.display = "block"; 
 }
 
@@ -451,7 +448,6 @@ function util_m(elem)
  elem_msg_ri_btn.onclick = () => {remove_item(all_sel_ind);};
  elem_msg_ri_d.onclick = () => {elem_msg_ri_a.href=get_page_url() + '?l=' + arg_l;}
 
- elem_msg_ri_s.innerHTML = " Note: Clear Cache.";
  elem_msg_ri.style.display = "block";
 }
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -118,12 +118,6 @@ function show_opts()
  elem_menu_opts.innerHTML = "";
 
  add_opts_it(elem_menu_opts, "Info: " + cch[id_m]["files"].length + " Files");
-
- add_opts_it(elem_menu_opts, "Cache File List", () => {
-   localStorage.setItem("cont_" + id_m, JSON.stringify(cch[id_m].files));
-   alert(localStorage.getItem("cont_" + id_m));
-   elem_msg.style.display = "none";
-  });
 
  add_opts_it(elem_menu_opts, "New File", () => {
    new_file_c();
