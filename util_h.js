@@ -1,4 +1,4 @@
-function is_mob() 
+function is_mob()
 { 
  return (screen.width < 600); 
 }
@@ -11,8 +11,8 @@ function get_lnk(str)
  var p1 = str.substring(0,spc_ind).trim();
  var p2 = str.substring(spc_ind).trim();
 
- if (p1 == "#lv") return "https://devx.rf.gd/lv/?l=" + p2;
- if (p1 == "#rt") return "https://devx.rf.gd/" + p2;
+ if (p1 == "#lv") return location.origin + "/lv/?l=" + p2;
+ if (p1 == "#rt") return location.origin + "/" + p2;
 
  if (p1 == "#g")  return "https://www.google.com.br/search?q=" + p2;
  if (p1 == "#gi") return "https://www.google.com.br/search?tbm=isch&q=" + p2;
