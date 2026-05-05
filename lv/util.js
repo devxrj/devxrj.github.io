@@ -507,12 +507,7 @@ function get_title_ai()
 {
   var txt1 = elem_msg_ai_i1.value.trim();
   if (!txt1.startsWith("#")) return;
-  var url_api = "";
-  
-  if (txt1.startsWith("#y")) 
-    url_api = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + txt1.substring(2).trim() + "&key=AIzaSyC4oGvGvMehPLyCwPoWMng-4NYD-2oLGbA";  
-  
-  ajax_r(url_api, 0, (a)=> elem_msg_ai_i0.value = a.items[0].snippet.title);
+  if (txt1.startsWith("#y")) get_title_yt(txt1.substring(2).trim(), t => elem_msg_ai_i0.value = t);
 }
 
 function filter_url_ai()
