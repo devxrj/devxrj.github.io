@@ -4,19 +4,20 @@
 <head>
 <title>Trad</title>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<link rel="icon" href="favicon.ico" type="image/x-icon"/>
-<link rel="manifest" href="mpwa.json" crossorigin="use-credentials">
+<link rel="icon" href="./favicon.ico" type="image/x-icon"/>
+<link rel="manifest" href="./mpwa.json" crossorigin="use-credentials">
+<script src="/util_h.js"></script>
 </head>
 
 <body style="background-color:white;">
 
-<input type="text" size="30" id="elem_inp_lnk">
+<input type="text" size="30" id="elem_inp_lnk" title="YoutubeUrl or :vid or Word">
 <br><br>
-<button onclick="evt_get_title_ytb();">GetTitle</button>
+<button onclick="get_title();">GetTitle</button>
 <br><br>
-<textarea id="elem_ta_msg" style="width:60%;height:200px" onchange="set_lnk_gt();"></textarea>
+<textarea id="elem_msg_ta" style="width:60%;height:200px" onchange="set_lnk_gt();"></textarea>
 <br><br>
-<button onclick="elem_ta_msg.select();">Select</button>
+<button onclick="elem_msg_ta.select();">Select</button>
 <button onclick="cp_clip()">Copy</button>
 <button id="elem_btn_shr" onclick="share_txt()">Share</button>
 <br><br>
@@ -29,111 +30,48 @@
 
 function cp_clip()
 {
- navigator.clipboard.writeText(elem_ta_msg.value)
-          .then(() => alert("successfully copied"))
-          .catch(() => alert("something went wrong"));
+   navigator.clipboard.writeText(elem_msg_ta.value)
+            .then(() => alert("successfully copied"))
+            .catch(() => alert("something went wrong"));
 }
 
 
-function evt_get_title_ytb()
+function get_title()
 {
   var lnk_t = elem_inp_lnk.value.trim();
   var id_vid = lnk_t.startsWith(":") ? lnk_t.substring(1) : "";
 
   if (id_vid == ""){
    var v_url = get_url(lnk_t);
-   if (!v_url) return set_ta_val(lnk_t);
+   if (!v_url) return set_val_ta(lnk_t);
    if (v_url.hostname.includes("youtu.be")) id_vid = v_url.pathname.substring(1);
-   if (v_url.hostname.includes("youtube.com")) id_vid = getp("v", v_url);
+   if (v_url.hostname.includes("youtube.com")) id_vid = get_p("v", v_url);
    if (v_url.pathname.includes("/shorts/")) id_vid = v_url.pathname.split("/").pop();
   }
 
-  if (id_vid == "") return set_ta_val(lnk_t);
-  var url_api = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${id_vid}&key=AIzaSyC4oGvGvMehPLyCwPoWMng-4NYD-2oLGbA`;
-
-  r_ajax(url_api,0,
- (a) => set_ta_val(a.items[0].snippet.title),
- (a) => { alert("ERROR");console.log (a); });
-
+  if (id_vid == "") return set_val_ta(lnk_t);
+  get_title_yt(id_vid, t => set_val_ta(t));
 }
 
-function set_ta_val(val)
+function set_val_ta(val)
 {
- elem_ta_msg.value = val;
+ elem_msg_ta.value = val;
  set_lnk_gt();
-}
-
-function get_url(lnk)
-{
- try {
-  var u = new URL(lnk);
-  return u;
- } catch (_) {
-  return null;
- }
-}
-
-function r_ajax(url, args, fn_suc, fn_err, tp_res)
-{
- var xhr = new XMLHttpRequest();
-
- xhr.responseType = (tp_res == undefined) ? "json" : tp_res;
- 
- var _fn_err = (fn_err == null || fn_err == undefined) ? (o) => console.log(o) : fn_err;
-
- xhr.onreadystatechange = () => {
-     if (xhr.readyState == 4){
-     if (xhr.status != 200) {_fn_err(xhr); return;}
-     if (xhr.response == null) {_fn_err(xhr); return;}
-     fn_suc(xhr.response);
-     }
- }
-
- if (typeof args == "number"){
-  xhr.open("GET", url, true);
-  xhr.send();
-  return;
-  };
-
- if (typeof args == "string"){
-  xhr.open("POST", url, true);
-  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  xhr.send(args);
-  return;
- }
-
- if (typeof args == "object"){
-  xhr.open("POST", url, true);
-  xhr.send(args);
- }
-
-}
-
-
-function getp(pn,url) 
-{
- var result = "", tmp = [];
- var items = (url == undefined) ? location.search.substr(1).split("&") : url.search.substr(1).split("&");
- for (var index = 0; index < items.length; index++) {
- tmp = items[index].split("=");
- if (tmp[0] === pn) result = decodeURIComponent(tmp[1].replaceAll("+","%20"));
- }
- return result;
 }
 
 function set_lnk_gt()
 {
- var ta_val = elem_ta_msg.value.trim();
+ var ta_val = elem_msg_ta.value.trim();
  var lnk = `https://translate.google.com/?sl=en&tl=pt&text=${encodeURIComponent(ta_val)}`;
  if (ta_val.toLowerCase().startsWith("http")) lnk = `https://translate.google.com/translate?sl=en&tl=pt&u=${encodeURIComponent(ta_val)}`;
  elem_lnk.href = lnk;
  elem_lnk.innerHTML = lnk;
- if (g_text != "") location.href = lnk;
+ if (text_g != "") location.href = lnk;
 }
 
 function share_txt()
 {
- navigator.share({"title": document.title ,  "text": elem_ta_msg.value.trim()})
+  navigator.share({"title": document.title ,  "text": elem_msg_ta.value.trim()})
           .then(() => alert('Shared successfully!'))
           .catch((error) => alert('Error!'));
 }
@@ -159,31 +97,31 @@ function install_pwa()
 
 
 var installPromptEvent = null;
-var g_text = "";
+var text_g = "";
 
 (() => { 
 
-navigator.serviceWorker.register('sw.js').then(function(reg) {
- console.log('Registration succeeded. Scope:' + reg.scope + ",installing:"+reg.installing+",waiting:"+reg.waiting+",active:"+reg.active);
-}).catch(function(error) {
- console.warn('Registration failed with ' + error);
-});
+  navigator.serviceWorker.register('sw.js').then(function(reg) {
+   console.log('Registration succeeded. Scope:' + reg.scope + ",installing:"+reg.installing+",waiting:"+reg.waiting+",active:"+reg.active);
+  }).catch(function(error) {
+   console.warn('Registration failed with ' + error);
+  });
 
-window.addEventListener("beforeinstallprompt", event => {
-    console.log("beforeinstallprompt Event");
-    event.preventDefault();
-    installPromptEvent = event;
-    elem_inst.style.display = "inline";
-    elem_inst.style.color = "blue";
-});
+  window.addEventListener("beforeinstallprompt", event => {
+      console.log("beforeinstallprompt Event");
+      event.preventDefault();
+      installPromptEvent = event;
+      elem_inst.style.display = "inline";
+      elem_inst.style.color = "blue";
+  });
 
-if (!navigator.share) elem_btn_shr.disabled = true;
- 
-g_text = getp("text");
-if (g_text != "") {
-  elem_inp_lnk.value = g_text;
-  evt_get_title_ytb();
-}
+  if (!navigator.share) elem_btn_shr.disabled = true;
+   
+  text_g = get_p("text");
+  if (text_g != "") {
+    elem_inp_lnk.value = text_g;
+    get_title();
+  }
  
 })();
 

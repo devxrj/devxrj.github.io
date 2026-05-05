@@ -172,3 +172,9 @@ function sleep(milliseconds)
  var start = new Date().getTime();
  for (var i = 0; i < 1e7; i++) if ((new Date().getTime() - start) > milliseconds) break;
 }
+
+function get_title_yt(vid, fn)
+{
+  var url_api = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + vid + "&key=AIzaSyC4oGvGvMehPLyCwPoWMng-4NYD-2oLGbA";   
+  ajax_r(url_api, 0, (res)=> fn(res.items[0].snippet.title));
+}
