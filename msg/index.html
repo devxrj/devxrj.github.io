@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>MSG</title>
+</head>
+
+<body style="background-color:white;">
+<a id="elem_lnk_ed"><div><br></div></a>
+<br>
+<select id="elem_term" style="width:90px;" onchange="set_lnk();"></select>
+<select id="elem_msg" style="margin-left:25px;width:90px;" onchange="set_lnk();"></select>
+<br><br>
+<textarea id="elem_ta_msg" style="width:60%;height:200px" onchange="upd_msg();"></textarea>
+<br><br>
+<button onclick="cp_clip()">Copy</button>
+<br><br>
+<div id="elem_cont">
+<input type="text" size="15" onchange="upd_lnk(this);">
+</div>
+<br><br>
+<a id="elem_lnk" target="_blank">{{lnk}}</a>
+
+<script>
+
+function get_text_wcom(text)
+{
+ return text.split("\n").filter(lin => !lin.trim().startsWith("//")).join("\n");
+}
+
+function set_lnk()
+{
+ elem_ta_msg.value = elem_msg.value.replaceAll("{{p}}",elem_term.value);
+ upd_msg();
+}
+
+function upd_msg()
+{
+ var url_wa = "https://wa.me/?text=" + encodeURIComponent(elem_ta_msg.value);
+ elem_lnk.innerHTML = url_wa;
+ elem_lnk.href = url_wa;
+}
+
+function upd_lnk(elem)
+{
+ if (elem.value == "______") return;
+ var tel = elem.value.trim().replace(/[^0-9]/g, "");
+ if (tel.length == 9) tel = "5521" + tel;
+ if (tel.length == 11) tel = "55" + tel;
+ var url_wa_new = elem_lnk.innerHTML.replace(/\/(\d)*\?/g,"/" + tel + "?");
+ elem_lnk.innerHTML = url_wa_new;
+ elem_lnk.href = url_wa_new ;
+}
+
+function cp_clip()
+{
+ navigator.clipboard.writeText(elem_ta_msg.value).then(() => alert("successfully copied")).catch(() => alert("something went wrong"));
+}
+
+
+(() => {
+
+ elem_lnk_ed.href = "/lv/?l=msg&ed=1&orig=" + btoa(location.href);
+
+ var conf_term = localStorage.getItem("conteudo_msg");
+ if (conf_term == null || conf_term == "") return;
+
+ var conf_term_wcom = get_text_wcom(conf_term);
+ var conf_term_ps = conf_term_wcom.split("------");
+ if (conf_term_ps.length != 3 ) return;
+
+ var terms = conf_term_ps[0];
+ var msgs = conf_term_ps[1];
+ var conts = conf_term_ps[2];
+
+
+   var option = document.createElement("option");
+   option.text = "Select..." ;
+   option.value = "______" ;
+   option.selected = true;
+   elem_term.add(option);
+
+   terms.split(";").forEach ((o,i) => { 
+     let o_ps = o.split("|");
+     let option = document.createElement("option");
+     option.text = (o_ps.length == 2) ? o_ps[0].trim() : o.trim() ;
+     option.value = (o_ps.length == 2) ? o_ps[1].trim() : o.trim() ;
+     elem_term.add(option);
+    });
+
+   var option2 = document.createElement("option");
+   option2.text = "Select..." ;
+   option2.value = "______" ;
+   option2.selected = true;
+   elem_msg.add(option2);
+
+   msgs.split(";").forEach ((o,i) => { 
+     let o_ps = o.split("|");
+     let option = document.createElement("option");
+     option.text = (o_ps.length == 2) ? o_ps[0].trim() : o.trim() ;
+     option.value = (o_ps.length == 2) ? o_ps[1].trim() : o.trim() ;
+     elem_msg.add(option);
+     });
+
+   
+   conts.split(";").forEach ((o,i) => {
+    var input = document.createElement("input");
+    var lbl = document.createElement("label");
+    input.name = "contact";
+    input.id = "rcont" + i;
+    lbl.setAttribute("for", input.id) ;
+ 
+    input.setAttribute("type", "radio");
+    input.onclick = () => upd_lnk(input);
+ 
+    let o_ps = o.split("|");
+    lbl.innerHTML = (o_ps.length == 2) ? o_ps[0].trim() : o.trim() ;
+    input.value = (o_ps.length == 2) ? o_ps[1].trim() : o.trim() ;
+    elem_cont.appendChild(input); 
+    elem_cont.appendChild(lbl);
+  });
+
+})();
+
+
+</script>
+
+</body>
+</html>
