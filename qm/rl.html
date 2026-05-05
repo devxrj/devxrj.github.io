@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>RndLnk</title>
+<meta charset="utf-8" />
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+</head>
+
+<body style="background-color:white;">
+
+<div id="elem_cont">
+
+<div>
+<div style="cursor:pointer;display:inline-block;width:48%;" onclick="elem_msg2.style.display='block';"><br></div>
+<div style="cursor:pointer;display:inline-block;width:48%;" onclick="show_opts();"><br></div>
+</div>
+
+<div style="text-align:center;">
+ <br>
+ <div id="elem_dv_quest" style="word-wrap:break-word;line-height:175%;"><br>...<br></div>
+</div>
+
+</div>
+
+<div id="elem_msg" style="display:none;position:fixed;z-index:1;padding-top:50px;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.4);" onclick="if (event.target==this) this.style.display='none';">
+<div id="elem_dv_msg" style="color:gray;background-color:#fefefe;margin:auto;border:1px solid #888;width:60%;font-family:arial,sans-serif;font-size:15px;">
+<div style="text-align:center;border-bottom:1px solid;"><span style="color:black">Options</span></div>
+<div id="elem_menu_opts" style="max-height:500px;overflow-y:auto;"></div>
+</div>
+</div>
+
+<div id="elem_msg2" style="display:none;position:fixed;z-index:1;padding-top:50px;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.4);" onclick="if (event.target==this) this.style.display='none';">
+<div id="elem_dv_msg2" style="color:gray;background-color:#fefefe;margin:auto;border:1px solid #888;width:60%;font-family:arial,sans-serif;font-size:15px;">
+<div style="text-align:center;border-bottom:1px solid;"><span style="color:black">Options</span></div>
+<div id="elem_menu_opts2" style="max-height:500px;overflow-y:auto;"></div>
+</div>
+</div>
+
+<script src="/util_h.js"></script>
+<script>
+
+function get_text_wcom(text)
+{
+  var tmp = text.split("\r\n").filter(lin => {
+  let lin_t = lin.trim();
+  if (lin_t.startsWith("//") || ["","[","]"].includes(lin_t)) return false;
+  return true;
+ });
+
+ return tmp.map((a) => (["(",")"].includes(a.trim()) ? "------" : a)).join("\n");
+
+}
+
+function show_opts()
+{
+ elem_menu_opts.innerHTML = "";
+
+ add_opts_it(elem_menu_opts, "", "Rnd (All)", () => { 
+  set_random(b => true);
+  elem_msg.style.display = "none";
+ });
+
+ if (lst_id != "") add_opts_it(elem_menu_opts, "", "Rnd (" + document.getElementById (lst_id).firstElementChild.innerHTML + ")", () => {
+   set_rnd_url(document.getElementById (lst_id));
+   elem_msg.style.display = "none";
+ });
+
+ if (arg_r != "" && arg_r != "1") add_opts_it(elem_menu_opts, "", "Rnd (URL::" + arg_r.split(";").length + ")", () => {
+   set_random_r();
+   elem_msg.style.display = "none";
+ });
+
+ add_opts_it(elem_menu_opts, "", "Edit", () => { 
+  location.href = "/lv/?l=" + arg_l + "&ed=1&orig=" + btoa(location.href);
+  elem_msg.style.display = "none";
+ });
+
+ add_opts_it(elem_menu_opts, "", "View", () => { 
+  location.href = "/lv/?l=" + arg_l + "&op=3";
+  elem_msg.style.display = "none";
+ });
+
+ elem_msg.style.display = "block";
+}
+
+function add_opts_it(elem, id, name, fn_click)
+{
+ var new_it = document.createElement("div");
+ if (id != "") new_it.id = id;
+ new_it.onclick = () => {fn_click(new_it, event);}; 
+ new_it.innerHTML = "<span style='cursor:default;'>" + name + "</span>";
+ new_it.style.cssText = "padding:5px;word-wrap:break-word;";
+ elem.appendChild(new_it);
+ if (new_it.previousElementSibling) new_it.previousElementSibling.style.borderBottom = "1px solid";
+}
+
+function set_random(fn_filter_div)
+{
+ var divs = Array.from(elem_menu_opts2.getElementsByTagName("div"));
+ var divs_f = divs.filter(fn_filter_div);
+ if (divs_f.length == 0) return;
+ set_rnd_url(divs_f[randomIntFromInterval(0, divs_f.length - 1)]);
+} 
+
+function set_random_r()
+{
+ if (arg_r == "1") return set_random(d => true); 
+ set_random(d => arg_r.split(";").map(s => s.trim()).includes(d.id));
+}
+
+function set_rnd_url(elem)
+{
+ lst_id = elem.id;
+ elem.firstElementChild.style.color = "blue";
+ elem_msg2.style.display = "none";
+
+ if (aux_items[lst_id] == undefined) return;
+
+ var qtd = aux_items[lst_id].length;
+ var elem_rnd = aux_items[lst_id][randomIntFromInterval(0, qtd-1)];
+
+ if (elem_rnd.lnk == "-") {
+   elem_dv_quest.innerHTML = `<span>${elem_rnd.lbl}</span>`;
+   return;
+ }
+
+ elem_dv_quest.innerHTML = `
+  <img src="${get_ico_lnk(elem_rnd.lnk)}" width="16" height="16" style="vertical-align:middle;margin-right:6px;" onerror="this.src='${get_ico_lnk(0)}'">
+  <a target="_blank" href="${elem_rnd.lnk}">${elem_rnd.lbl}</a>
+  <br><br>
+  <div id="elem_dv_quest_ext" style="display:none"><button id="btn_quest_ext" type="button">View</button></div>                            
+`;
+
+ var url = get_url(elem_rnd.lnk);
+
+ if ((url.hostname == "www.youtube.com")) {   
+   if (get_p("v", url) == "") return;
+   elem_dv_quest_ext.style.display = "block";
+   btn_quest_ext.onclick = () => set_iframe_yt(url);
+ }
+
+}
+
+function randomIntFromInterval(min, max)
+{ 
+ return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+
+function set_iframe_yt(url)
+{
+ var vid_id = get_p("v", url);
+ var lnk_ext = url.href;
+ var lnk_emb = "https://www.youtube.com/embed/" + vid_id;
+ var wh_attr = is_mob() ? 'width="100%" height="333"' : 'width="50%" height="400"';
+ elem_dv_quest_ext.innerHTML  = `<iframe ${wh_attr} src="${lnk_emb}"></iframe>`;
+ if (get_p("ext", url) != "") {
+ lnk_ext = lnk_ext.substring(0,lnk_ext.indexOf("ext=")-1);
+ var times = get_p("ext", url).split(",");
+ elem_dv_quest_ext.innerHTML += "<br><br>";
+ times.forEach ((o,i) => {
+   var t_name = o.trim();
+   var t_time = t_name;
+   if (o.includes(":")) {
+       var o_p = o.split(":");
+       t_name = o_p[0].trim();
+       t_time = o_p[1].trim();
+   }
+   elem_dv_quest_ext.innerHTML += `<a target="_blank" style="margin-left:20px;" href="https://www.youtube.com/watch?v=${vid_id}&t=${t_time}">${t_name}</a>`;
+ });
+ }
+}
+
+var arg_l  = (get_p("l") == "") ? "rl" : get_p("l");
+var aux_items = {};
+var lst_id = "";
+var arg_r = get_p("r");
+
+(()=>{
+
+ var conf_term = localStorage.getItem("conteudo_" + arg_l);
+ if (conf_term == null || conf_term == "") conf_term = "N/D------";
+
+ var conf_term_wcom = get_text_wcom(conf_term);
+ var conf_term_ps = conf_term_wcom.split("------");
+
+ conf_term_ps.forEach ((o,index) => { 
+   var o_ps = o.trim().split("\n");
+   var name = o_ps[0];
+   if (name == "") return;
+   var has_lbl = true;
+   if (get_config(name)[0] != 1){
+     name = ".";
+     has_lbl = false;
+   }
+   
+   if (aux_items[name] == undefined) aux_items[name] = [];
+
+   o_ps.forEach ((lin,ind) => { 
+     if (has_lbl && ind == 0) return;
+     var conf = get_config(lin);  
+     aux_items[name].push({"lbl": conf[1], "lnk": (conf[2] == undefined) ? "-" : conf[2]});
+   }); 
+
+});
+
+
+Object.keys(aux_items).sort().forEach((k) => add_opts_it(elem_menu_opts2, k, k + " (" + aux_items[k].length + ")", set_rnd_url));
+
+document.addEventListener('keydown', (event) => {   
+    if (event.code == 'KeyR') set_random(b => true); 
+ });
+
+ if (arg_r != "") return set_random_r(); 
+
+})();
+
+
+</script>
+
+</body>
+</html>

@@ -5,7 +5,7 @@
 <title>RP</title>
 <meta charset="utf-8" />
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<script src="/utilh.js"></script>
+<script src="/util_h.js"></script>
 </head>
 
 <body style="background-color:white;">
@@ -22,7 +22,7 @@
 (()=>{
 
  var url_link = "https://example.com";
- var p_comp = getp("c");
+ var p_comp = get_p("c");
  if (p_comp == "")   url_link = get_lnk_amc12();
  if (p_comp == "10") url_link = get_lnk_amc10();
  if (p_comp == "13") url_link = get_lnk_aime();
@@ -34,16 +34,6 @@
 
 })();
 
-function getp(pn,url) 
-{
- var result = "", tmp = [];
- var items = (url==undefined)?location.search.substr(1).split("&"):url.search.substr(1).split("&");
- for (var index = 0; index < items.length; index++) {
- tmp = items[index].split("=");
- if (tmp[0] === pn) result = decodeURIComponent(tmp[1]);
- }
- return result;
-}
 
 function get_lnk_amc10()
 {
