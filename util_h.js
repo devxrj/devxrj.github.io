@@ -175,6 +175,6 @@ function sleep(milliseconds)
 
 function get_title_yt(vid, fn)
 {
-  var url_api = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + vid + "&key=AIzaSyC4oGvGvMehPLyCwPoWMng-4NYD-2oLGbA";   
+  var url_api = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + vid + "&key=" + localStorage.getItem("conf_pk");   
   ajax_r(url_api, 0, (res)=> fn(res.items[0].snippet.title));
 }
